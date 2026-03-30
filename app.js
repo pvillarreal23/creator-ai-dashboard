@@ -323,6 +323,30 @@ document.addEventListener('DOMContentLoaded', () => {
   drawWeeklyChart();
   renderAISummary();
 
+  document.querySelector('.btn-primary').addEventListener('click', async () => {
+        const btn = document.querySelector('.btn-primary');
+        const originalHTML = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Starting...';
+        addLog('INFO', 'Triggering new task via Make.com pipeline...');
+        try {
+                const res = await fetch('https://hook.us2.make.com/7lc7rbdxzl1ggreujjs16ndyppyaad5s', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ trigger: 'new_task', timestamp: new Date().toISOString(), source: 'dashboard' })
+                });
+                if (res.ok) {
+                          addLog('SUCCESS', 'New task triggered — pipeline is running!');
+                } else {
+                          addLog('ERROR', 'Pipeline returned status ' + res.status);
+                }
+        } catch (err) {
+                addLog('ERROR', 'Failed to reach pipeline: ' + err.message);
+        } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+        }
+  });
   document.getElementById('modal-close-btn').addEventListener('click', closeModal);
   document.getElementById('task-modal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
