@@ -21,20 +21,20 @@ const SC: Record<Status, string> = {
 const STATUSES: Status[] = ["RESEARCHED","TITLED","SCRIPTED","PRODUCTION","READY","SCHEDULED","LIVE"];
 
 const initialChannels: Channel[] = [
-  { id:"1", name:"AI & Tech Explainers", subs:"0", views:"0", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"+0%", vids:"0", ctr:"0%", revenue:"$0", nextVideo:"Apr 2" },
-  { id:"2", name:"Finance & Business", subs:"—", views:"—", freq:"2x/week", color:"from-green-600 to-emerald-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 7" },
-  { id:"3", name:"Psychology & Behavior", subs:"—", views:"—", freq:"1x/week", color:"from-purple-600 to-pink-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 13" },
+  { id:"1", name:"The AI Edge", subs:"0", views:"0", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"+0%", vids:"0", ctr:"0%", revenue:"$0", nextVideo:"Apr 2" },
+  { id:"2", name:"Cash Flow Code", subs:"—", views:"—", freq:"2x/week", color:"from-green-600 to-emerald-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 7" },
+  { id:"3", name:"Mind Shift", subs:"—", views:"—", freq:"1x/week", color:"from-purple-600 to-pink-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 13" },
 ];
 
 const initialPipeline: PipelineItem[] = [
-  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"AI & Tech Explainers", status:"RESEARCHED", date:"Apr 2", views:"-" },
-  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"AI & Tech Explainers", status:"RESEARCHED", date:"Apr 5", views:"-" },
-  { id:"4", title:"How I Built a $10K/mo AI Business", channel:"Finance & Business", status:"RESEARCHED", date:"Apr 12", views:"-" },
-  { id:"5", title:"The Psychology of Going Viral", channel:"Psychology & Behavior", status:"RESEARCHED", date:"Apr 14", views:"-" },
-  { id:"6", title:"AI Agents Will Replace SaaS", channel:"AI & Tech Explainers", status:"TITLED", date:"Apr 16", views:"-" },
-  { id:"7", title:"Why Most Side Hustles Fail in 2026", channel:"Finance & Business", status:"TITLED", date:"Apr 19", views:"-" },
-  { id:"8", title:"How YouTube Algorithm Actually Works", channel:"Psychology & Behavior", status:"RESEARCHED", date:"Apr 21", views:"-" },
-  { id:"3", title:"How Make.com Automates Everything", channel:"AI & Tech Explainers", status:"RESEARCHED", date:"Apr 9", views:"-" },
+  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 2", views:"-" },
+  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 5", views:"-" },
+  { id:"4", title:"How I Built a $10K/mo AI Business", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 12", views:"-" },
+  { id:"5", title:"The Psychology of Going Viral", channel:"Mind Shift", status:"TITLED", date:"Apr 14", views:"-" },
+  { id:"6", title:"AI Agents Will Replace SaaS", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 16", views:"-" },
+  { id:"7", title:"Why Most Side Hustles Fail in 2026", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 19", views:"-" },
+  { id:"8", title:"How YouTube Algorithm Actually Works", channel:"Mind Shift", status:"TITLED", date:"Apr 21", views:"-" },
+  { id:"3", title:"How Make.com Automates Everything", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 9", views:"-" },
 ];
 
 const SKILLS = [
