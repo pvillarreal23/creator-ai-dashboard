@@ -2,13 +2,14 @@
 // Keeps your API key server-side; the browser only calls /api/make
 
 const MAKE_BASE = process.env.MAKE_BASE_URL || 'https://us2.make.com/api/v2';
-const TEAM_ID   = process.env.MAKE_TEAM_ID  || '2078612';
+const TEAM_ID = process.env.MAKE_TEAM_ID || '2078612';
 
 // Only these endpoint patterns are proxied
 const ALLOWED = [
   /^scenarios$/,
   /^scenarios\/\d+$/,
   /^scenarios\/\d+\/executions$/,
+  /^scenarios\/\d+\/logs$/,
 ];
 
 module.exports = async function handler(req, res) {
