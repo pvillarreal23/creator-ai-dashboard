@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown } from "lucide-react";
+import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents";
+type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter";
 
 interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
 interface ThreadMsg { id: string; sender_type: "user" | "agent"; sender_agent_id: string | null; sender_name?: string; content: string; created_at: string; status: string; }
@@ -10,46 +10,44 @@ interface Thread { id: string; subject: string; participants: string[]; messages
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Human personas for agents — professional business headshots via uifaces
-const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "female"; photo: string }> = {
-  "ceo-agent":                        { humanName: "Marcus Chen",      gender: "male",   photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face" },
-  "content-vp-agent":                 { humanName: "Sofia Rivera",     gender: "female", photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face" },
-  "operations-vp-agent":              { humanName: "James Okafor",     gender: "male",   photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face" },
-  "analytics-vp-agent":               { humanName: "Priya Sharma",     gender: "female", photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face" },
-  "monetization-vp-agent":            { humanName: "Daniel Kim",       gender: "male",   photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face" },
-  "ai-and-tech-channel-manager-agent":{ humanName: "Aisha Patel",      gender: "female", photo: "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=150&h=150&fit=crop&crop=face" },
-  "finance-channel-manager-agent":    { humanName: "Ryan Mitchell",    gender: "male",   photo: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop&crop=face" },
-  "psychology-channel-manager-agent": { humanName: "Elena Vasquez",    gender: "female", photo: "https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=150&h=150&fit=crop&crop=face" },
-  "scriptwriter-agent":               { humanName: "Noah Thompson",    gender: "male",   photo: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face" },
-  "hook-specialist-agent":            { humanName: "Mia Jackson",      gender: "female", photo: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=150&h=150&fit=crop&crop=face" },
-  "storyteller-agent":                { humanName: "Liam O'Connor",    gender: "male",   photo: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face" },
-  "shorts-and-clips-agent":           { humanName: "Zara Ahmed",       gender: "female", photo: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=150&h=150&fit=crop&crop=face" },
-  "thumbnail-designer-agent":         { humanName: "Kai Nakamura",     gender: "male",   photo: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&h=150&fit=crop&crop=face" },
-  "video-editor-agent":               { humanName: "Isabella Torres",  gender: "female", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face" },
-  "seo-specialist-agent":             { humanName: "Ethan Park",       gender: "male",   photo: "https://images.unsplash.com/photo-1463453091185-61582044d556?w=150&h=150&fit=crop&crop=face" },
-  "project-manager-agent":            { humanName: "Olivia Bennett",   gender: "female", photo: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face" },
-  "workflow-orchestrator-agent":       { humanName: "Amir Hassan",      gender: "male",   photo: "https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&h=150&fit=crop&crop=face" },
-  "qa-lead-agent":                    { humanName: "Hannah Lee",       gender: "female", photo: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face" },
-  "reflection-council-agent":         { humanName: "Victor Andrei",    gender: "male",   photo: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=150&h=150&fit=crop&crop=face" },
-  "senior-researcher-agent":          { humanName: "Grace Nguyen",     gender: "female", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face" },
-  "trend-researcher-agent":           { humanName: "Leo Martinez",     gender: "male",   photo: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=150&h=150&fit=crop&crop=face" },
-  "data-analyst-agent":               { humanName: "Chloe Williams",   gender: "female", photo: "https://images.unsplash.com/photo-1614644147724-2d4785d69962?w=150&h=150&fit=crop&crop=face" },
-  "partnership-manager-agent":        { humanName: "Omar Farouk",      gender: "male",   photo: "https://images.unsplash.com/photo-1556157382-97eda2d62296?w=150&h=150&fit=crop&crop=face" },
-  "affiliate-coordinator-agent":      { humanName: "Natalie Brooks",   gender: "female", photo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=150&h=150&fit=crop&crop=face" },
-  "digital-product-manager-agent":    { humanName: "Raj Kapoor",       gender: "male",   photo: "https://images.unsplash.com/photo-1531891437562-4301cf35b7e4?w=150&h=150&fit=crop&crop=face" },
-  "newsletter-strategist-agent":      { humanName: "Sarah Lindgren",   gender: "female", photo: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=150&h=150&fit=crop&crop=face" },
-  "community-manager-agent":          { humanName: "Tyler Robinson",   gender: "male",   photo: "https://images.unsplash.com/photo-1548372290-8d01b6c8e78c?w=150&h=150&fit=crop&crop=face" },
-  "social-media-manager-agent":       { humanName: "Jade Moreau",      gender: "female", photo: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=150&h=150&fit=crop&crop=face" },
-  "secretary-agent":                  { humanName: "Emma Fischer",     gender: "female", photo: "https://images.unsplash.com/photo-1548142813-c348350df52b?w=150&h=150&fit=crop&crop=face" },
-  "compliance-officer-agent":         { humanName: "David Reeves",     gender: "male",   photo: "https://images.unsplash.com/photo-1557862921-37829c790f19?w=150&h=150&fit=crop&crop=face" },
-  "web-designer-agent":               { humanName: "Luna Chang",       gender: "female", photo: "https://images.unsplash.com/photo-1590086782957-93c06ef21604?w=150&h=150&fit=crop&crop=face" },
-  "web-developer-agent":              { humanName: "Alex Petrov",      gender: "male",   photo: "https://images.unsplash.com/photo-1545167622-3a6ac756afa4?w=150&h=150&fit=crop&crop=face" },
+// Human personas for agents — local business headshot photos
+const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "female" }> = {
+  "ceo-agent":                        { humanName: "Marcus Chen",      gender: "male"   },
+  "content-vp-agent":                 { humanName: "Sofia Rivera",     gender: "female" },
+  "operations-vp-agent":              { humanName: "James Okafor",     gender: "male"   },
+  "analytics-vp-agent":               { humanName: "Priya Sharma",     gender: "female" },
+  "monetization-vp-agent":            { humanName: "Daniel Kim",       gender: "male"   },
+  "ai-and-tech-channel-manager-agent":{ humanName: "Aisha Patel",      gender: "female" },
+  "finance-channel-manager-agent":    { humanName: "Ryan Mitchell",    gender: "male"   },
+  "psychology-channel-manager-agent": { humanName: "Elena Vasquez",    gender: "female" },
+  "scriptwriter-agent":               { humanName: "Noah Thompson",    gender: "male"   },
+  "hook-specialist-agent":            { humanName: "Mia Jackson",      gender: "female" },
+  "storyteller-agent":                { humanName: "Liam O'Connor",    gender: "male"   },
+  "shorts-and-clips-agent":           { humanName: "Zara Ahmed",       gender: "female" },
+  "thumbnail-designer-agent":         { humanName: "Kai Nakamura",     gender: "male"   },
+  "video-editor-agent":               { humanName: "Isabella Torres",  gender: "female" },
+  "seo-specialist-agent":             { humanName: "Ethan Park",       gender: "male"   },
+  "project-manager-agent":            { humanName: "Olivia Bennett",   gender: "female" },
+  "workflow-orchestrator-agent":       { humanName: "Amir Hassan",      gender: "male"   },
+  "qa-lead-agent":                    { humanName: "Hannah Lee",       gender: "female" },
+  "reflection-council-agent":         { humanName: "Victor Andrei",    gender: "male"   },
+  "senior-researcher-agent":          { humanName: "Grace Nguyen",     gender: "female" },
+  "trend-researcher-agent":           { humanName: "Leo Martinez",     gender: "male"   },
+  "data-analyst-agent":               { humanName: "Chloe Williams",   gender: "female" },
+  "partnership-manager-agent":        { humanName: "Omar Farouk",      gender: "male"   },
+  "affiliate-coordinator-agent":      { humanName: "Natalie Brooks",   gender: "female" },
+  "digital-product-manager-agent":    { humanName: "Raj Kapoor",       gender: "male"   },
+  "newsletter-strategist-agent":      { humanName: "Sarah Lindgren",   gender: "female" },
+  "community-manager-agent":          { humanName: "Tyler Robinson",   gender: "male"   },
+  "social-media-manager-agent":       { humanName: "Jade Moreau",      gender: "female" },
+  "secretary-agent":                  { humanName: "Emma Fischer",     gender: "female" },
+  "compliance-officer-agent":         { humanName: "David Reeves",     gender: "male"   },
+  "web-designer-agent":               { humanName: "Luna Chang",       gender: "female" },
+  "web-developer-agent":              { humanName: "Alex Petrov",      gender: "male"   },
 };
 
 function getAgentAvatar(agentId: string): string {
-  const persona = AGENT_PERSONAS[agentId];
-  if (persona) return persona.photo;
-  return `https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face`;
+  return `/avatars/${agentId}.jpg`;
 }
 
 function getHumanName(agentId: string): string {
@@ -353,6 +351,7 @@ export default function Dashboard() {
     { id:"automation", label:"Automation", icon:Zap },
     { id:"analytics", label:"Analytics", icon:BarChart3 },
     { id:"agents", label:"Agents", icon:MessageSquare },
+    { id:"newsletter", label:"Newsletter", icon:Mail },
   ];
 
   return (
@@ -370,7 +369,7 @@ export default function Dashboard() {
             <div className="w-px h-6 bg-white/10 hidden sm:block" />
             <div className="flex items-center gap-2.5 hidden sm:flex">
               <div className="w-9 h-9 rounded-full ring-2 ring-purple-500/50 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=80&h=80&fit=crop&crop=face" alt="Pedro" className="w-full h-full object-cover" />
+                <img src="/avatars/pedro.jpg" alt="Pedro" className="w-full h-full object-cover" />
               </div>
               <div className="leading-tight">
                 <p className="text-sm font-semibold">Pedro</p>
@@ -428,6 +427,29 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            {/* AI Research Tools */}
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2 mb-4"><Sparkles className="w-5 h-5 text-purple-400" />AI Tools</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { name: "Trend Scanner", desc: "Find trending topics across YouTube, Google, Reddit", icon: "🔍", prompt: "Research the top 10 trending topics across AI, finance, and psychology right now. Include search volume, competition level, and content angle for each." },
+                  { name: "Competitor Spy", desc: "Analyze top competitor channels", icon: "🕵️", prompt: "Analyze our top 3 competitors for each channel. What topics are they covering? What's working? Where are the gaps we can exploit?" },
+                  { name: "Title Generator", desc: "Generate CTR-optimized titles", icon: "✨", prompt: "Generate 10 high-CTR title options for each channel based on current trending topics. Score each title for curiosity, clarity, and SEO." },
+                  { name: "Content Audit", desc: "Review all channels performance", icon: "📊", prompt: "Run a full content audit across all 3 channels. Analyze what's working, what's not, and provide specific recommendations for each channel." },
+                  { name: "Newsletter Brief", desc: "Draft this week's newsletter", icon: "✉️", prompt: "Write a complete newsletter for this week. Include: top 3 insights from our latest videos, 1 exclusive tip not in the videos, a content teaser for next week, and a product recommendation with affiliate potential." },
+                  { name: "Monetization Scan", desc: "Find new revenue opportunities", icon: "💎", prompt: "Scan all our channels and content for untapped monetization opportunities. Include affiliate programs, sponsorship fits, digital product ideas, and community offerings." },
+                  { name: "Script Doctor", desc: "Improve a video script", icon: "🩺", prompt: "Review our latest video script. Check the hook strength, retention structure, storytelling arc, CTA effectiveness, and SEO integration. Provide a score and specific fixes." },
+                  { name: "Growth Plan", desc: "Build a 90-day growth strategy", icon: "🚀", prompt: "Create a detailed 90-day growth plan for the entire empire. Include subscriber targets, content volume, collaboration opportunities, and key milestones for each channel." },
+                ].map(tool => (
+                  <button key={tool.name} onClick={() => { setTab("agents"); setAgentPrompt(tool.prompt); }} className="bg-white/5 border border-white/10 hover:border-white/25 rounded-xl p-4 text-left transition-all group">
+                    <span className="text-lg">{tool.icon}</span>
+                    <p className="text-xs font-semibold mt-2 group-hover:text-white transition-colors">{tool.name}</p>
+                    <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed">{tool.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2 mb-4"><Youtube className="w-5 h-5 text-red-400" />Channels</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -742,50 +764,6 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {/* AI Search Tools */}
-                      <div>
-                        <h4 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">AI Research Tools</h4>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                          {[
-                            { name: "Trend Scanner", desc: "Find trending topics across YouTube, Google, Reddit", icon: "🔍", prompt: "Research the top 10 trending topics across AI, finance, and psychology right now. Include search volume, competition level, and content angle for each." },
-                            { name: "Competitor Spy", desc: "Analyze top competitor channels", icon: "🕵️", prompt: "Analyze our top 3 competitors for each channel. What topics are they covering? What's working? Where are the gaps we can exploit?" },
-                            { name: "Title Generator", desc: "Generate CTR-optimized titles", icon: "✨", prompt: "Generate 10 high-CTR title options for each channel based on current trending topics. Score each title for curiosity, clarity, and SEO." },
-                            { name: "Content Audit", desc: "Review all channels performance", icon: "📊", prompt: "Run a full content audit across all 3 channels. Analyze what's working, what's not, and provide specific recommendations for each channel." },
-                            { name: "Newsletter Brief", desc: "Draft this week's newsletter", icon: "✉️", prompt: "Write a complete newsletter for this week. Include: top 3 insights from our latest videos, 1 exclusive tip not in the videos, a content teaser for next week, and a product recommendation with affiliate potential." },
-                            { name: "Monetization Scan", desc: "Find new revenue opportunities", icon: "💎", prompt: "Scan all our channels and content for untapped monetization opportunities. Include affiliate programs, sponsorship fits, digital product ideas, and community offerings." },
-                            { name: "Script Doctor", desc: "Improve a video script", icon: "🩺", prompt: "Review our latest video script. Check the hook strength, retention structure, storytelling arc, CTA effectiveness, and SEO integration. Provide a score and specific fixes." },
-                            { name: "Growth Plan", desc: "Build a 90-day growth strategy", icon: "🚀", prompt: "Create a detailed 90-day growth plan for the entire empire. Include subscriber targets, content volume, collaboration opportunities, and key milestones for each channel." },
-                          ].map(tool => (
-                            <button key={tool.name} onClick={() => setAgentPrompt(tool.prompt)} className="bg-white/[0.03] border border-white/5 hover:border-white/20 rounded-lg p-3 text-left transition-all group">
-                              <span className="text-lg">{tool.icon}</span>
-                              <p className="text-xs font-semibold mt-1.5 group-hover:text-white transition-colors">{tool.name}</p>
-                              <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed">{tool.desc}</p>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Newsletter Quick Actions */}
-                      <div className="bg-gradient-to-r from-cyan-500/5 to-blue-500/5 border border-cyan-500/20 rounded-xl p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">✉️</span>
-                            <h4 className="text-sm font-semibold">Newsletter Hub</h4>
-                          </div>
-                          <span className="text-[9px] text-cyan-400/60 px-2 py-0.5 rounded-full border border-cyan-500/20">Powered by Newsletter Strategist</span>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {[
-                            { label: "Write Weekly Issue", prompt: "Write this week's newsletter issue. Pull the best insights from our recent videos, add an exclusive tip, tease upcoming content, and include one curated resource recommendation. Format it ready to send." },
-                            { label: "Grow Subscriber List", prompt: "Create a plan to grow our email list by 1,000 subscribers in 30 days. Include lead magnet ideas for each channel, CTA scripts for videos, and a landing page strategy." },
-                            { label: "Welcome Sequence", prompt: "Design a 5-email automated welcome sequence for new subscribers. Each email should deliver value, build trust, and gradually introduce our products and community." },
-                          ].map(action => (
-                            <button key={action.label} onClick={() => setAgentPrompt(action.prompt)} className="flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-all">
-                              <ChevronRight className="w-3 h-3 shrink-0" />{action.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   ) : (
                     /* Active thread */
@@ -1026,6 +1004,155 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ===== NEWSLETTER TAB ===== */}
+        {tab === "newsletter" && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2"><Mail className="w-5 h-5 text-cyan-400" /> Newsletter Command Center</h2>
+                <p className="text-sm text-white/40 mt-1">Powered by Sarah Lindgren — Newsletter Strategist Agent</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <img src="/avatars/newsletter-strategist-agent.jpg" className="w-8 h-8 rounded-full ring-2 ring-cyan-500/50 object-cover" alt="" />
+                <div className="text-right">
+                  <p className="text-xs font-medium">Sarah Lindgren</p>
+                  <p className="text-[10px] text-white/30">Newsletter Strategist</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Subscribers", value: "0", change: "Starting", icon: UserPlus, color: "cyan" },
+                { label: "Open Rate", value: "—", change: "No data yet", icon: MailOpen, color: "blue" },
+                { label: "Click Rate", value: "—", change: "No data yet", icon: TrendingUp, color: "purple" },
+                { label: "Issues Sent", value: "0", change: "Draft first issue", icon: Send, color: "green" },
+              ].map(s => (
+                <div key={s.label} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <s.icon className="w-4 h-4 text-white/30" />
+                    <span className="text-[10px] text-white/30">{s.change}</span>
+                  </div>
+                  <p className="text-xl font-bold">{s.value}</p>
+                  <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Main grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Write & Create */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><PenTool className="w-4 h-4 text-cyan-400" /> Create Content</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      { title: "Write Weekly Issue", desc: "Pull insights from latest videos, add exclusive tips, tease upcoming content", icon: FileText, color: "from-cyan-600 to-blue-600", prompt: "Write this week's newsletter issue. Pull the best insights from our recent videos, add an exclusive tip, tease upcoming content, and include one curated resource recommendation. Format it ready to send with subject line options." },
+                      { title: "Write Welcome Sequence", desc: "5-email automated series for new subscribers", icon: Mail, color: "from-purple-600 to-pink-600", prompt: "Design a complete 5-email automated welcome sequence for new subscribers. Each email should deliver value, build trust, and gradually introduce our products and community. Include subject lines, send timing, and full copy for each email." },
+                      { title: "Write Product Launch Email", desc: "Announcement + sales email for digital product drops", icon: Megaphone, color: "from-amber-600 to-orange-600", prompt: "Write a product launch email sequence (3 emails: teaser, launch day, last chance) for our next digital product. Include subject lines, preview text, full copy, and CTAs. Make it feel exclusive to newsletter subscribers." },
+                      { title: "Write Re-engagement Email", desc: "Win back inactive subscribers who stopped opening", icon: RefreshCw, color: "from-red-600 to-pink-600", prompt: "Write a 3-email re-engagement sequence for subscribers who haven't opened in 30+ days. Include a compelling reason to come back, an exclusive offer, and a final 'should we remove you?' email. Focus on delivering immediate value." },
+                    ].map(item => (
+                      <button key={item.title} onClick={() => { setTab("agents"); setAgentPrompt(item.prompt); }} className="flex items-start gap-3 p-4 bg-white/[0.03] border border-white/5 hover:border-white/20 rounded-xl text-left transition-all group">
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center shrink-0`}>
+                          <item.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium group-hover:text-white transition-colors">{item.title}</p>
+                          <p className="text-[10px] text-white/30 mt-0.5 leading-relaxed">{item.desc}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Strategy & Growth */}
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-green-400" /> Growth & Strategy</h3>
+                  <div className="space-y-2">
+                    {[
+                      { title: "30-Day Growth Plan", desc: "Grow list by 1,000 subscribers with lead magnets, CTAs, and landing pages", prompt: "Create a detailed 30-day plan to grow our email list by 1,000 subscribers. Include lead magnet ideas for each channel, video CTA scripts, landing page strategy, and cross-promotion tactics. Break it into weekly milestones." },
+                      { title: "Lead Magnet Ideas", desc: "Create irresistible freebies for each channel to drive signups", prompt: "Design 3 lead magnets for each of our 3 channels (AI Edge, Cash Flow Code, Mind Shift). Each should solve a specific problem, be quick to create, and have high perceived value. Include titles, formats, and promotion strategy." },
+                      { title: "Monetization Strategy", desc: "Plan newsletter revenue streams — sponsors, products, affiliates", prompt: "Create a newsletter monetization roadmap. Include: when to add sponsors (subscriber threshold), how to price newsletter ad placements, which affiliate products to feature, and how to use the newsletter to drive digital product sales. Include revenue projections." },
+                      { title: "Content Calendar", desc: "Plan 4 weeks of newsletter content with themes and CTAs", prompt: "Build a 4-week newsletter content calendar. Each week should have: a theme tied to our video content, 1 exclusive insight, 1 curated resource, 1 product/affiliate mention, and a specific CTA. Alternate between educational, inspirational, and promotional tones." },
+                      { title: "A/B Testing Plan", desc: "Subject lines, send times, formats — systematic testing roadmap", prompt: "Design a 30-day A/B testing plan for our newsletter. Test subject line styles, send day/time, content format (long vs short, text vs visual), CTA placement, and personalization. Include hypothesis, test design, and success metrics for each test." },
+                      { title: "Segmentation Strategy", desc: "Split list by interest, engagement, and customer status", prompt: "Design an email list segmentation strategy. Define segments by: channel interest (AI/Finance/Psychology), engagement level (active/lukewarm/cold), customer status (free/paid), and content preference. For each segment, recommend different content approaches and frequencies." },
+                    ].map(item => (
+                      <button key={item.title} onClick={() => { setTab("agents"); setAgentPrompt(item.prompt); }} className="w-full flex items-center justify-between px-4 py-3 bg-white/[0.02] border border-white/5 hover:border-white/15 rounded-lg text-left transition-all group">
+                        <div>
+                          <p className="text-xs font-medium group-hover:text-white transition-colors">{item.title}</p>
+                          <p className="text-[10px] text-white/25 mt-0.5">{item.desc}</p>
+                        </div>
+                        <ChevronRight className="w-3 h-3 text-white/15 group-hover:text-white/40 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right sidebar */}
+              <div className="space-y-4">
+                {/* Quick Send */}
+                <div className="bg-gradient-to-b from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-cyan-400" /> Quick Draft</h3>
+                  <p className="text-[10px] text-white/40 mb-3">Describe what you want and the Newsletter Strategist will draft it</p>
+                  <textarea
+                    value={agentPrompt}
+                    onChange={e => setAgentPrompt(e.target.value)}
+                    placeholder="e.g. Write a newsletter about our latest AI tools video with a special discount code..."
+                    rows={4}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-cyan-500/50 resize-none mb-2"
+                  />
+                  <button onClick={() => { setTab("agents"); sendToAgents(); }} disabled={!agentPrompt.trim()} className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 px-3 py-2 rounded-lg text-xs font-medium transition-all">
+                    <Send className="w-3 h-3" /> Send to Newsletter Team
+                  </button>
+                </div>
+
+                {/* Email Templates */}
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold mb-3">Email Templates</h3>
+                  <div className="space-y-2">
+                    {[
+                      { name: "Weekly Digest", type: "Recurring", color: "bg-blue-500" },
+                      { name: "Video Launch", type: "Triggered", color: "bg-purple-500" },
+                      { name: "Product Promo", type: "Campaign", color: "bg-amber-500" },
+                      { name: "Welcome Series", type: "Automation", color: "bg-green-500" },
+                      { name: "Re-engagement", type: "Automation", color: "bg-red-500" },
+                    ].map(t => (
+                      <div key={t.name} className="flex items-center justify-between px-3 py-2 bg-white/[0.03] rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full ${t.color}`} />
+                          <span className="text-xs">{t.name}</span>
+                        </div>
+                        <span className="text-[9px] text-white/25 px-1.5 py-0.5 border border-white/10 rounded">{t.type}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Automation Status */}
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <h3 className="text-sm font-semibold mb-3">Automations</h3>
+                  <div className="space-y-3">
+                    {[
+                      { name: "Welcome Sequence", status: "Not set up", statusColor: "text-white/25" },
+                      { name: "Weekly Digest", status: "Not set up", statusColor: "text-white/25" },
+                      { name: "Video Notification", status: "Not set up", statusColor: "text-white/25" },
+                      { name: "Re-engagement Flow", status: "Not set up", statusColor: "text-white/25" },
+                    ].map(a => (
+                      <div key={a.name} className="flex items-center justify-between">
+                        <span className="text-xs text-white/60">{a.name}</span>
+                        <span className={`text-[10px] ${a.statusColor}`}>{a.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
