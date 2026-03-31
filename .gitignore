@@ -35,6 +35,9 @@ __pycache__/
 # discord bot
 discord-bot/node_modules/
 
+# credentials (NEVER commit)
+agent_credentials_registry.json
+
 # vercel
 .vercel
 
