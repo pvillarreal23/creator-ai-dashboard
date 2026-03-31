@@ -111,6 +111,6 @@ Only route to agents when the message explicitly delegates, asks for input, or e
         if start >= 0 and end > start:
             data = json.loads(text[start:end])
             return [aid for aid in data.get("route_to", []) if aid in all_agent_names]
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WARNING] Routing analysis failed for {agent_name}: {e}")
     return []

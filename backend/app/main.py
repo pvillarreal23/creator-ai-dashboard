@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db, async_session
 from app.services.agent_loader import load_agents_to_db
 from app.routers import agents, threads
+from app.config import CORS_ORIGINS
 import os
 
 os.makedirs("data", exist_ok=True)
@@ -23,7 +24,7 @@ app = FastAPI(title="YouTube Empire", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
