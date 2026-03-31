@@ -453,10 +453,32 @@ export default function Dashboard() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <nav className="flex gap-1 mb-8 bg-white/5 rounded-xl p-1 overflow-x-auto w-fit">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-4 h-4" />{t.label}
+        <nav className="flex gap-0.5 mb-8 bg-white/5 rounded-xl p-1 overflow-x-auto w-fit items-center">
+          {/* Business */}
+          {tabs.filter(t => ["overview","pipeline","channels","analytics"].includes(t.id)).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
+              <t.icon className="w-3.5 h-3.5" />{t.label}
+            </button>
+          ))}
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          {/* Team */}
+          {tabs.filter(t => ["agents","activity","feed"].includes(t.id)).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-purple-500/20 text-purple-300" : "text-white/50 hover:text-white/70"}`}>
+              <t.icon className="w-3.5 h-3.5" />{t.label}
+            </button>
+          ))}
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          {/* Content */}
+          {tabs.filter(t => ["newsletter","social","skills"].includes(t.id)).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-cyan-500/20 text-cyan-300" : "text-white/50 hover:text-white/70"}`}>
+              <t.icon className="w-3.5 h-3.5" />{t.label}
+            </button>
+          ))}
+          <div className="w-px h-5 bg-white/10 mx-1" />
+          {/* Operations */}
+          {tabs.filter(t => ["automation","vault"].includes(t.id)).map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-amber-500/20 text-amber-300" : "text-white/50 hover:text-white/70"}`}>
+              <t.icon className="w-3.5 h-3.5" />{t.label}
             </button>
           ))}
         </nav>
@@ -1353,23 +1375,34 @@ export default function Dashboard() {
                     <span className="text-[10px] text-white/30">{activityData?.agent_statuses?.length || 0} agents</span>
                   </div>
                   <div className="max-h-[500px] overflow-y-auto divide-y divide-white/5">
-                    {activityData?.agent_statuses?.map(a => (
-                      <div key={a.id} className="flex items-center gap-3 px-5 py-2.5 hover:bg-white/[0.02]">
-                        <div className="w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0" style={{ borderColor: a.avatar_color + "60" }}>
-                          <img src={getAgentAvatar(a.id)} alt="" className="w-full h-full object-cover" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium truncate">{getHumanName(a.id) || a.name}</span>
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${a.status === "working" ? "bg-green-400 animate-pulse" : "bg-white/20"}`} />
+                    {activityData?.agent_statuses?.map(a => {
+                      const tier = getAgentTier(a.id);
+                      const ts = TIER_STYLES[tier];
+                      const dept = DEPT_COLORS[a.department] || DEPT_COLORS.general;
+                      return (
+                        <div key={a.id} className="flex items-center gap-3 px-5 py-2.5 hover:bg-white/[0.02]">
+                          <div className={`w-9 h-9 rounded-full overflow-hidden ring-2 ${ts.ring} shrink-0`}>
+                            <img src={getAgentAvatar(a.id)} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <p className="text-[10px] text-white/30 truncate">{a.current_task}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold truncate">{getHumanName(a.id) || a.name}</span>
+                              <span className={`text-[7px] px-1.5 py-0 rounded-full border font-medium ${ts.badge}`}>{tier}</span>
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${a.status === "working" ? "bg-green-400 animate-pulse" : "bg-white/20"}`} />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-white/40 truncate">{a.role}</span>
+                              <span className="text-[10px] text-white/15">·</span>
+                              <span className={`text-[9px] flex items-center gap-0.5`}><span className={`w-1 h-1 rounded-full ${dept.dot}`} /><span className="text-white/25">{dept.label}</span></span>
+                            </div>
+                            <p className="text-[10px] text-white/30 truncate mt-0.5">{a.current_task}</p>
+                          </div>
+                          <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${a.status === "working" ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/25"}`}>
+                            {a.status === "working" ? "Working" : "Done"}
+                          </span>
                         </div>
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${a.status === "working" ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/25"}`}>
-                          {a.status === "working" ? "Working" : "Idle"}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1513,17 +1546,28 @@ export default function Dashboard() {
                     return (
                       <div key={msg.id} className={`border rounded-lg p-3 ${severityColors[msg.severity] || severityColors.info} ${!msg.read ? "ring-1 ring-white/10" : ""}`}>
                         <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0" style={{ borderColor: msg.agent_color + "60" }}>
-                            {msg.agent_id === "pedro" ? (
-                              <img src="/avatars/pedro.jpg" className="w-full h-full object-cover" alt="" />
-                            ) : (
-                              <img src={getAgentAvatar(msg.agent_id)} className="w-full h-full object-cover" alt="" />
-                            )}
-                          </div>
+                          {(() => {
+                            const feedTier = msg.agent_id !== "pedro" ? getAgentTier(msg.agent_id) : null;
+                            const feedTs = feedTier ? TIER_STYLES[feedTier] : null;
+                            return (
+                              <div className={`w-9 h-9 rounded-full overflow-hidden ring-2 ${feedTs?.ring || "ring-purple-500/60"} shrink-0`}>
+                                {msg.agent_id === "pedro" ? (
+                                  <img src="/avatars/pedro.jpg" className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <img src={getAgentAvatar(msg.agent_id)} className="w-full h-full object-cover" alt="" />
+                                )}
+                              </div>
+                            );
+                          })()}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="text-xs font-semibold">{msg.agent_id === "pedro" ? "Pedro (You)" : getHumanName(msg.agent_id) || msg.agent_name}</span>
-                              <span className="text-[9px] text-white/20">{msg.agent_id !== "pedro" ? msg.agent_name : ""}</span>
+                              {msg.agent_id !== "pedro" && (() => {
+                                const ft = getAgentTier(msg.agent_id);
+                                const fts = TIER_STYLES[ft];
+                                return <span className={`text-[7px] px-1.5 py-0 rounded-full border font-medium ${fts.badge}`}>{ft}</span>;
+                              })()}
+                              <span className="text-[9px] text-white/25">{msg.agent_id !== "pedro" ? msg.agent_name : "Empire Operator"}</span>
                               <span className="text-[8px] px-1.5 py-0 rounded border border-white/10 text-white/20">{FEED_CHANNELS[msg.channel]?.emoji} {FEED_CHANNELS[msg.channel]?.name || msg.channel}</span>
                               <span className="text-[10px] text-white/15 ml-auto">{new Date(msg.created_at).toLocaleString()}</span>
                             </div>
