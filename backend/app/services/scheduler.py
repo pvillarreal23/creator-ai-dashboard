@@ -5,11 +5,16 @@ import asyncio
 import re
 from datetime import datetime, timezone
 from sqlalchemy import select, update
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from app.database import async_session
 from app.models.scheduler import ScheduledTask, TaskRun, Escalation
 from app.models.thread import Thread, Message
 from app.models.agent import Agent
 from app.services.claude_service import generate_agent_response, analyze_routing
+
+# Global scheduler instance
+scheduler = AsyncIOScheduler(timezone="UTC")
 
 ESCALATION_KEYWORDS = [
     "need your approval", "requires human", "escalate", "pedro",
@@ -360,6 +365,58 @@ async def init_scheduled_tasks():
         await db.commit()
         total = (await db.execute(select(ScheduledTask))).scalars().all()
         print(f"[SCHEDULER] {len(total)} scheduled tasks ready")
+
+
+def parse_cron_expression(cron_expr: str) -> dict:
+    """Parse '0 9 * * 1' into APScheduler CronTrigger kwargs."""
+    parts = cron_expr.strip().split()
+    if len(parts) != 5:
+        return None
+    return {
+        "minute": parts[0],
+        "hour": parts[1],
+        "day": parts[2],
+        "month": parts[3],
+        "day_of_week": parts[4],
+    }
+
+
+async def start_scheduler():
+    """Load all enabled tasks from DB and register them as cron jobs."""
+    async with async_session() as db:
+        result = await db.execute(select(ScheduledTask).where(ScheduledTask.enabled == True))
+        tasks = result.scalars().all()
+
+        for task in tasks:
+            cron_kwargs = parse_cron_expression(task.cron_expression)
+            if not cron_kwargs:
+                print(f"[SCHEDULER] Skipping '{task.name}' — bad cron: {task.cron_expression}")
+                continue
+
+            scheduler.add_job(
+                run_scheduled_task,
+                CronTrigger(**cron_kwargs),
+                args=[task.id],
+                id=f"task_{task.id}",
+                name=task.name,
+                replace_existing=True,
+                misfire_grace_time=300,
+            )
+
+        scheduler.start()
+        jobs = scheduler.get_jobs()
+        print(f"[SCHEDULER] Started with {len(jobs)} cron jobs running")
+
+        # Print next 5 fires
+        for job in jobs[:5]:
+            print(f"  -> {job.name}: next fire at {job.next_run_time}")
+
+
+def stop_scheduler():
+    """Shut down the scheduler gracefully."""
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
+        print("[SCHEDULER] Stopped")
 
 
 async def get_active_runs(db) -> list:

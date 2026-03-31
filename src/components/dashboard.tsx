@@ -72,10 +72,10 @@ const TIER_STYLES: Record<Tier, { bg: string; border: string; text: string; badg
 };
 
 function getAgentTier(agentId: string): Tier {
-  if (agentId === "ceo-agent") return "C-Suite";
+  if (agentId === "ceo-agent" || agentId === "cfo-agent") return "C-Suite";
   if (agentId.includes("-vp-")) return "VP";
   if (agentId.includes("channel-manager")) return "Manager";
-  if (["project-manager-agent","workflow-orchestrator-agent","secretary-agent"].includes(agentId)) return "Support";
+  if (["project-manager-agent","workflow-orchestrator-agent","secretary-agent","compliance-officer-agent"].includes(agentId)) return "Support";
   return "Specialist";
 }
 
@@ -284,6 +284,10 @@ export default function Dashboard() {
   const [vaultEntries, setVaultEntries] = useState<VaultEntry[]>([]);
   const [socialFilter, setSocialFilter] = useState("all");
 
+  // === Tools Tab State ===
+  const [toolsList, setToolsList] = useState<any[]>([]);
+  const [scenariosList, setScenariosList] = useState<Record<string, any>>({});
+
   // Fetch agents and activity on mount
   useEffect(() => {
     fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
@@ -294,6 +298,8 @@ export default function Dashboard() {
     fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
     fetch(`${API_URL}/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
     fetch(`${API_URL}/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
+    fetch(`${API_URL}/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
+    fetch(`${API_URL}/api/tools/scenarios`).then(r => r.json()).then(setScenariosList).catch(() => {});
   }, []);
 
   // Poll activity + feed every 10 seconds
@@ -429,69 +435,187 @@ export default function Dashboard() {
     { id:"tools", label:"Tools", icon:Wrench },
   ];
 
+  const sidebarSections: { label: string; items: { id: Tab; label: string; icon: typeof LayoutDashboard; badge?: number }[] }[] = [
+    { label: "COMMAND", items: [
+      { id: "overview", label: "Overview", icon: LayoutDashboard },
+      { id: "inbox", label: "Inbox", icon: Inbox, badge: (activityData?.pending_escalations || 0) },
+    ]},
+    { label: "CONTENT", items: [
+      { id: "pipeline", label: "Pipeline", icon: Layers },
+      { id: "channels", label: "Channels", icon: Youtube },
+      { id: "newsletter", label: "Newsletter", icon: Mail },
+    ]},
+    { label: "TEAM", items: [
+      { id: "agents", label: "Agents", icon: MessageSquare },
+      { id: "activity", label: "Activity", icon: Activity },
+      { id: "feed", label: "Feed", icon: MessageSquare, badge: feedUnread.total || 0 },
+    ]},
+    { label: "OPERATIONS", items: [
+      { id: "automation", label: "Automation", icon: Zap },
+      { id: "tools", label: "Tools", icon: Wrench },
+      { id: "social", label: "Social", icon: Globe },
+      { id: "vault", label: "Vault", icon: KeyRound },
+    ]},
+    { label: "INSIGHTS", items: [
+      { id: "analytics", label: "Analytics", icon: BarChart3 },
+      { id: "skills", label: "Skills", icon: BookOpen },
+    ]},
+  ];
+
+  const currentTabLabel = tabs.find(t => t.id === tab)?.label || "Overview";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Mobile bottom nav — most important tabs for quick access
+  const mobileBottomTabs: { id: Tab; label: string; icon: typeof LayoutDashboard }[] = [
+    { id: "overview", label: "Home", icon: LayoutDashboard },
+    { id: "feed", label: "Feed", icon: MessageSquare },
+    { id: "inbox", label: "Inbox", icon: Inbox },
+    { id: "agents", label: "Agents", icon: Bot },
+    { id: "activity", label: "Activity", icon: Activity },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <header className="border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center"><PlayCircle className="w-5 h-5" /></div>
-            <span className="text-lg font-semibold">Creator AI</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/60 hidden sm:inline">Agency Dashboard</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setTab("activity")} className="relative p-2 rounded-lg hover:bg-white/5"><Bell className="w-5 h-5 text-white/60" />{(activityData?.pending_escalations || 0) > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 rounded-full text-[9px] font-bold px-1">{activityData?.pending_escalations}</span>}</button>
-            <button className="p-2 rounded-lg hover:bg-white/5"><Settings className="w-5 h-5 text-white/60" /></button>
-            <div className="w-px h-6 bg-white/10 hidden sm:block" />
-            <div className="flex items-center gap-2.5 hidden sm:flex">
-              <div className="w-9 h-9 rounded-full ring-2 ring-purple-500/50 overflow-hidden">
-                <img src="/avatars/pedro.jpg" alt="Pedro" className="w-full h-full object-cover" />
+    <div className="h-screen bg-[#0a0a0a] text-white flex overflow-hidden">
+      {/* ===== MOBILE OVERLAY MENU ===== */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileMenuOpen(false)} />
+          <div className="relative w-64 bg-[#0d0d0d] border-r border-white/[0.06] flex flex-col h-full animate-in slide-in-from-left">
+            <div className="h-14 flex items-center justify-between px-4 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+                  <PlayCircle className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold">Creator AI</span>
               </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold">Pedro</p>
-                <p className="text-[10px] text-white/40">Empire Operator</p>
-              </div>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-lg hover:bg-white/10">
+                <X className="w-5 h-5 text-white/50" />
+              </button>
             </div>
+            <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+              {sidebarSections.map(section => (
+                <div key={section.label}>
+                  <p className="text-[10px] font-semibold text-white/25 uppercase tracking-[0.12em] px-2 mb-1">{section.label}</p>
+                  <div className="space-y-0.5">
+                    {section.items.map(item => {
+                      const isActive = tab === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => { setTab(item.id); setMobileMenuOpen(false); }}
+                          className={`w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                            isActive ? "bg-white/[0.08] text-white" : "text-white/40"
+                          }`}
+                        >
+                          <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-white/30"}`} />
+                          <span className="flex-1 text-left">{item.label}</span>
+                          {(item.badge || 0) > 0 && (
+                            <span className="min-w-[18px] h-[18px] flex items-center justify-center bg-red-500/90 rounded-full text-[9px] font-bold px-1">{item.badge}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </nav>
           </div>
         </div>
-      </header>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <nav className="flex gap-0.5 mb-8 bg-white/5 rounded-xl p-1 overflow-x-auto w-fit items-center">
-          {/* Business */}
-          {tabs.filter(t => ["overview","pipeline","channels","analytics"].includes(t.id)).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
-          <div className="w-px h-5 bg-white/10 mx-1" />
-          {/* Team */}
-          {tabs.filter(t => ["agents","activity","feed"].includes(t.id)).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-purple-500/20 text-purple-300" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
-          <div className="w-px h-5 bg-white/10 mx-1" />
-          {/* Content */}
-          {tabs.filter(t => ["newsletter","social","skills"].includes(t.id)).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-cyan-500/20 text-cyan-300" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
-          <div className="w-px h-5 bg-white/10 mx-1" />
-          {/* Operations */}
-          {tabs.filter(t => ["automation","vault","tools"].includes(t.id)).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-amber-500/20 text-amber-300" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-3.5 h-3.5" />{t.label}
-            </button>
-          ))}
-          <div className="w-px h-5 bg-white/10 mx-1" />
-          {/* Business */}
-          {tabs.filter(t => ["inbox"].includes(t.id)).map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${tab === t.id ? "bg-green-500/20 text-green-300" : "text-white/50 hover:text-white/70"}`}>
-              <t.icon className="w-3.5 h-3.5" />{t.label}
-            </button>
+      {/* ===== LEFT SIDEBAR (desktop only) ===== */}
+      <aside className="hidden md:flex w-60 shrink-0 bg-[#0d0d0d] border-r border-white/[0.06] flex-col h-screen sticky top-0 z-40">
+        {/* Logo */}
+        <div className="h-16 flex items-center gap-3 px-5 border-b border-white/[0.06]">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+            <PlayCircle className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-sm font-semibold tracking-tight">Creator AI</span>
+            <p className="text-[10px] text-white/30 -mt-0.5">Agency Dashboard</p>
+          </div>
+        </div>
+
+        {/* Nav sections */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+          {sidebarSections.map(section => (
+            <div key={section.label}>
+              <p className="text-[10px] font-semibold text-white/25 uppercase tracking-[0.12em] px-2 mb-1.5">{section.label}</p>
+              <div className="space-y-0.5">
+                {section.items.map(item => {
+                  const isActive = tab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setTab(item.id)}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all group ${
+                        isActive
+                          ? "bg-white/[0.08] text-white shadow-sm"
+                          : "text-white/40 hover:text-white/70 hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-white/30 group-hover:text-white/50"}`} />
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {(item.badge || 0) > 0 && (
+                        <span className="min-w-[18px] h-[18px] flex items-center justify-center bg-red-500/90 rounded-full text-[9px] font-bold px-1">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </nav>
+
+        {/* Sidebar footer: bell + profile */}
+        <div className="border-t border-white/[0.06] p-3 space-y-2">
+          <button onClick={() => setTab("activity")} className="relative w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-white/40 hover:text-white/70 hover:bg-white/[0.04] transition-all">
+            <Bell className="w-4 h-4" />
+            <span>Notifications</span>
+            {(activityData?.pending_escalations || 0) > 0 && (
+              <span className="ml-auto min-w-[18px] h-[18px] flex items-center justify-center bg-red-500/90 rounded-full text-[9px] font-bold px-1">{activityData?.pending_escalations}</span>
+            )}
+          </button>
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.04] transition-all cursor-pointer">
+            <div className="w-8 h-8 rounded-full ring-2 ring-purple-500/40 overflow-hidden">
+              <img src="/avatars/pedro.jpg" alt="Pedro" className="w-full h-full object-cover" />
+            </div>
+            <div className="leading-tight flex-1 min-w-0">
+              <p className="text-[13px] font-semibold truncate">Pedro</p>
+              <p className="text-[10px] text-white/30">Empire Operator</p>
+            </div>
+            <Settings className="w-3.5 h-3.5 text-white/20" />
+          </div>
+        </div>
+      </aside>
+
+      {/* ===== MAIN CONTENT ===== */}
+      <main className="flex-1 overflow-y-auto min-w-0 pb-16 md:pb-0">
+        {/* Top bar */}
+        <div className="sticky top-0 z-30 h-14 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/[0.06] flex items-center px-4 md:px-8">
+          {/* Mobile hamburger */}
+          <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-1.5 -ml-1 mr-2 rounded-lg hover:bg-white/10">
+            <Layers className="w-5 h-5 text-white/60" />
+          </button>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-white/30 hidden md:inline">Dashboard</span>
+            <ChevronRight className="w-3.5 h-3.5 text-white/20 hidden md:inline" />
+            <span className="font-medium">{currentTabLabel}</span>
+          </div>
+          {/* Mobile: notification badge */}
+          <div className="ml-auto md:hidden flex items-center gap-2">
+            {(activityData?.pending_escalations || 0) > 0 && (
+              <button onClick={() => setTab("inbox")} className="relative p-1.5 rounded-lg hover:bg-white/10">
+                <Bell className="w-5 h-5 text-white/60" />
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center bg-red-500 rounded-full text-[8px] font-bold">{activityData?.pending_escalations}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="px-3 py-4 md:px-8 md:py-6 max-w-[1400px]">
 
         {tab === "overview" && (
           <div className="space-y-8">
@@ -798,15 +922,15 @@ export default function Dashboard() {
         {tab === "agents" && (
           <div className="space-y-6">
             {/* Sub-nav */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
                 {(["chat","directory","departments","org"] as const).map(v => (
-                  <button key={v} onClick={() => setAgentView(v)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${agentView === v ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
-                    {{ chat: "Command Center", directory: "By Tier", departments: "By Department", org: "Org Chart" }[v]}
+                  <button key={v} onClick={() => setAgentView(v)} className={`px-2.5 md:px-3 py-1.5 rounded-lg text-[11px] md:text-xs font-medium transition-all whitespace-nowrap ${agentView === v ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
+                    {{ chat: "Command", directory: "Tier", departments: "Dept", org: "Org" }[v]}
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-white/30">{agents.length} agents online</span>
+              <span className="text-xs text-white/30 shrink-0 hidden sm:block">{agents.length} agents</span>
             </div>
 
             {/* COMMAND CENTER — Single prompt → CEO delegates */}
@@ -1502,9 +1626,9 @@ export default function Dashboard() {
 
         {/* ===== FEED TAB ===== */}
         {tab === "feed" && (
-          <div className="flex gap-4 h-[calc(100vh-180px)]">
+          <div className="flex gap-4 h-[calc(100vh-120px)] md:h-[calc(100vh-120px)]" style={{ height: "calc(100vh - 120px - env(safe-area-inset-bottom, 0px))" }}>
             {/* Channel sidebar */}
-            <div className="w-48 shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
+            <div className="hidden md:flex w-48 shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex-col">
               <div className="p-3 border-b border-white/10">
                 <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Channels</h3>
               </div>
@@ -1525,13 +1649,26 @@ export default function Dashboard() {
             {/* Message stream */}
             <div className="flex-1 bg-white/5 border border-white/10 rounded-xl flex flex-col overflow-hidden">
               {/* Header */}
-              <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{feedChannel === "all" ? "📡" : FEED_CHANNELS[feedChannel]?.emoji || "💬"}</span>
-                  <h3 className="text-sm font-semibold">{feedChannel === "all" ? "All Channels" : FEED_CHANNELS[feedChannel]?.name || feedChannel}</h3>
-                  <span className="text-[10px] text-white/20">— live feed from your agents</span>
+              <div className="px-3 md:px-5 py-3 border-b border-white/10 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-base shrink-0">{feedChannel === "all" ? "📡" : FEED_CHANNELS[feedChannel]?.emoji || "💬"}</span>
+                  <h3 className="text-sm font-semibold truncate">{feedChannel === "all" ? "All Channels" : FEED_CHANNELS[feedChannel]?.name || feedChannel}</h3>
+                  <span className="text-[10px] text-white/20 hidden md:inline">— live feed from your agents</span>
                 </div>
-                <button onClick={markAllRead} className="text-[10px] text-white/30 hover:text-white/60 px-2 py-1 border border-white/10 rounded">Mark all read</button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {/* Mobile channel picker */}
+                  <select
+                    value={feedChannel}
+                    onChange={e => setFeedChannel(e.target.value)}
+                    className="md:hidden bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-[10px] text-white/60 focus:outline-none"
+                  >
+                    <option value="all" className="bg-[#141414]">All</option>
+                    {Object.entries(FEED_CHANNELS).map(([key, val]) => (
+                      <option key={key} value={key} className="bg-[#141414]">{val.emoji} {val.name}</option>
+                    ))}
+                  </select>
+                  <button onClick={markAllRead} className="text-[10px] text-white/30 hover:text-white/60 px-2 py-1 border border-white/10 rounded whitespace-nowrap">Mark read</button>
+                </div>
               </div>
 
               {/* Messages */}
@@ -1773,94 +1910,140 @@ export default function Dashboard() {
         {tab === "inbox" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2"><Inbox className="w-5 h-5 text-blue-400" /> Business Inbox</h2>
-              <span className="text-xs text-white/30">{threads.length} conversations</span>
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2"><Inbox className="w-5 h-5 text-blue-400" /> Inbox</h2>
+                <p className="text-sm text-white/40 mt-1">Escalations, approvals, and important updates from your team</p>
+              </div>
+              <button onClick={() => setTab("agents")} className="flex items-center gap-2 text-xs bg-purple-600 hover:bg-purple-500 px-3 py-2 rounded-lg font-medium transition-all"><Plus className="w-3 h-3" /> New Thread</button>
             </div>
 
-            {/* Revenue Projections */}
-            <div className="bg-gradient-to-r from-green-500/5 to-emerald-500/5 border border-green-500/20 rounded-xl p-5">
-              <h3 className="text-sm font-semibold flex items-center gap-2 mb-4"><TrendingUp className="w-4 h-4 text-green-400" /> Revenue Projections — Year 1</h3>
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                {[
-                  { label: "Month 3", value: "$800", desc: "AdSense + first affiliates" },
-                  { label: "Month 6", value: "$4,000", desc: "+ sponsorships + products" },
-                  { label: "Month 9", value: "$12,000", desc: "+ newsletter + memberships" },
-                  { label: "Month 12", value: "$25,000", desc: "Full revenue diversification" },
-                ].map(p => (
-                  <div key={p.label} className="bg-white/5 rounded-lg p-3 text-center">
-                    <p className="text-[10px] text-white/40">{p.label}</p>
-                    <p className="text-lg font-bold text-green-400">{p.value}</p>
-                    <p className="text-[9px] text-white/25 mt-1">{p.desc}</p>
+            {/* Summary stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+                <AlertTriangle className="w-4 h-4 text-amber-400 mb-2" />
+                <p className="text-2xl font-bold">{activityData?.pending_escalations || 0}</p>
+                <p className="text-xs text-white/40">Needs Your Decision</p>
+              </div>
+              <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                <MessageSquare className="w-4 h-4 text-blue-400 mb-2" />
+                <p className="text-2xl font-bold">{threads.length}</p>
+                <p className="text-xs text-white/40">Active Threads</p>
+              </div>
+              <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
+                <CheckCircle className="w-4 h-4 text-green-400 mb-2" />
+                <p className="text-2xl font-bold">{activityData?.completed_today || 0}</p>
+                <p className="text-xs text-white/40">Completed Today</p>
+              </div>
+              <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4">
+                <Activity className="w-4 h-4 text-purple-400 mb-2" />
+                <p className="text-2xl font-bold">{feedUnread.total}</p>
+                <p className="text-xs text-white/40">Unread Messages</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Left: Escalations + Recent completed */}
+              <div className="lg:col-span-1 space-y-4">
+                {/* Escalations needing action */}
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-amber-500/10 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-400" /> Action Required</h3>
+                    <span className="text-[10px] text-amber-400">{activityData?.escalations?.length || 0}</span>
                   </div>
-                ))}
-              </div>
-              <div className="h-24 flex items-end gap-1">
-                {[0,0,100,300,500,800,1500,2500,4000,6000,9000,12000,16000,20000,25000].map((v,i) => (
-                  <div key={i} className="flex-1 bg-gradient-to-t from-green-600 to-emerald-400 rounded-t-sm opacity-60 hover:opacity-100 transition-all" style={{height: `${Math.max((v/25000)*100, 1)}%`}} />
-                ))}
-              </div>
-              <div className="flex justify-between mt-2 text-[9px] text-white/20">
-                <span>Launch</span><span>Month 3</span><span>Month 6</span><span>Month 9</span><span>Year 1</span>
-              </div>
-            </div>
-
-            {/* Subscriber Projections */}
-            <div className="bg-gradient-to-r from-purple-500/5 to-blue-500/5 border border-purple-500/20 rounded-xl p-5">
-              <h3 className="text-sm font-semibold flex items-center gap-2 mb-4"><Users className="w-4 h-4 text-purple-400" /> Subscriber Growth Projections</h3>
-              <div className="grid grid-cols-4 gap-4">
-                {[
-                  { label: "Month 3", value: "5K", channels: "AI Edge: 3K, Cash Flow: 1.5K, Mind Shift: 500" },
-                  { label: "Month 6", value: "50K", channels: "AI Edge: 30K, Cash Flow: 12K, Mind Shift: 8K" },
-                  { label: "Year 1", value: "250K", channels: "AI Edge: 150K, Cash Flow: 60K, Mind Shift: 40K" },
-                  { label: "Year 2", value: "2.5M", channels: "Exponential growth with Shorts + multi-platform" },
-                ].map(p => (
-                  <div key={p.label} className="bg-white/5 rounded-lg p-3">
-                    <p className="text-[10px] text-white/40">{p.label}</p>
-                    <p className="text-lg font-bold text-purple-400">{p.value}</p>
-                    <p className="text-[9px] text-white/25 mt-1">{p.channels}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Thread inbox — email style */}
-            <div className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden">
-              <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Thread Inbox</h3>
-                <button onClick={() => setTab("agents")} className="text-xs text-purple-400 hover:text-purple-300">+ New Thread</button>
-              </div>
-              <div className="divide-y divide-white/5">
-                {threads.map(t => {
-                  const firstAgent = t.participants?.[0];
-                  const tier = firstAgent ? getAgentTier(firstAgent) : null;
-                  const ts = tier ? TIER_STYLES[tier] : null;
-                  return (
-                    <button key={t.id} onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="w-full text-left flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition-all">
-                      <div className="flex -space-x-2 shrink-0">
-                        {t.participants?.slice(0, 4).map((pid: string) => (
-                          <img key={pid} src={getAgentAvatar(pid)} className={`w-8 h-8 rounded-full object-cover ring-2 ring-[#0a0a0a] ${TIER_STYLES[getAgentTier(pid)]?.ring || ""}`} alt="" />
-                        ))}
+                  <div className="p-3 space-y-2 max-h-72 overflow-y-auto">
+                    {(!activityData?.escalations || activityData.escalations.length === 0) ? (
+                      <div className="text-center py-6">
+                        <CheckCircle className="w-8 h-8 text-green-400/30 mx-auto mb-2" />
+                        <p className="text-xs text-white/30">All clear — nothing needs your approval</p>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium truncate">{t.subject}</p>
-                          {firstAgent && ts && <span className={`text-[7px] px-1.5 py-0 rounded-full border font-medium ${ts.badge}`}>{tier}</span>}
+                    ) : activityData.escalations.map(e => {
+                      const eAgent = getAgentById(e.agent_id);
+                      const eTier = getAgentTier(e.agent_id);
+                      const eTs = TIER_STYLES[eTier];
+                      return (
+                        <div key={e.id} className="bg-white/5 rounded-lg p-3">
+                          <div className="flex items-start gap-2.5">
+                            <div className={`w-8 h-8 rounded-full overflow-hidden ring-2 ${eTs.ring} shrink-0`}>
+                              <img src={getAgentAvatar(e.agent_id)} className="w-full h-full object-cover" alt="" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-semibold">{getHumanName(e.agent_id) || eAgent?.name || e.agent_id}</span>
+                                <span className={`text-[7px] px-1.5 py-0 rounded-full border font-medium ${eTs.badge}`}>{eTier}</span>
+                              </div>
+                              <p className="text-[10px] text-white/50 mt-1 leading-relaxed">{e.reason}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <button onClick={() => resolveEscalation(e.id)} className="text-[10px] text-green-400 hover:text-green-300 px-2 py-1 border border-green-500/20 rounded hover:bg-green-500/10 transition-all">Approve</button>
+                                <button onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${e.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500/20 rounded hover:bg-blue-500/10 transition-all">View Thread</button>
+                                <span className={`text-[8px] px-1.5 py-0.5 rounded-full ml-auto ${e.severity === "high" ? "bg-red-500/20 text-red-400" : e.severity === "medium" ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-white/25"}`}>{e.severity}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-white/30 mt-0.5">
-                          {t.participants?.slice(0, 3).map((pid: string) => getHumanName(pid) || pid).join(", ")}
-                          {(t.participants?.length || 0) > 3 ? ` +${t.participants.length - 3} more` : ""}
-                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Recent completed tasks */}
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/10">
+                    <h3 className="text-sm font-semibold flex items-center gap-2"><CheckCircle className="w-4 h-4 text-green-400" /> Recently Completed</h3>
+                  </div>
+                  <div className="p-3 space-y-1.5 max-h-64 overflow-y-auto">
+                    {activityData?.recent_runs?.filter(r => r.status === "complete").slice(0, 10).map(r => (
+                      <div key={r.id} className="flex items-start gap-2 py-1.5 px-2 rounded-lg hover:bg-white/[0.03]">
+                        <CheckCircle className="w-3 h-3 text-green-400 mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-white/60 truncate">{r.task_name}</p>
+                          {r.summary && <p className="text-[10px] text-white/25 truncate">{r.summary}</p>}
+                        </div>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] text-white/20">{t.updated_at ? new Date(t.updated_at).toLocaleDateString() : ""}</p>
-                        <div className="flex items-center gap-1 mt-1 justify-end">
+                    ))}
+                    {(!activityData?.recent_runs || activityData.recent_runs.filter(r => r.status === "complete").length === 0) && (
+                      <p className="text-xs text-white/20 text-center py-4">No completed tasks yet</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Thread list */}
+              <div className="lg:col-span-2 bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden flex flex-col" style={{ maxHeight: 600 }}>
+                <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Conversations ({threads.length})</h3>
+                  <span className="text-[10px] text-white/30">Click to open in Agents tab</span>
+                </div>
+                <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+                  {threads.map(t => {
+                    const firstAgent = t.participants?.[0];
+                    const tier = firstAgent ? getAgentTier(firstAgent) : null;
+                    const ts = tier ? TIER_STYLES[tier] : null;
+                    return (
+                      <button key={t.id} onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="w-full text-left flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-all">
+                        <div className="flex -space-x-2 shrink-0">
+                          {t.participants?.slice(0, 4).map((pid: string) => (
+                            <img key={pid} src={getAgentAvatar(pid)} className={`w-8 h-8 rounded-full object-cover ring-2 ring-[#0a0a0a] ${TIER_STYLES[getAgentTier(pid)]?.ring || ""}`} alt="" />
+                          ))}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">{t.subject}</p>
+                            {firstAgent && ts && <span className={`text-[7px] px-1.5 py-0 rounded-full border font-medium ${ts.badge}`}>{tier}</span>}
+                          </div>
+                          <p className="text-[10px] text-white/30 mt-0.5">
+                            {t.participants?.slice(0, 3).map((pid: string) => getHumanName(pid) || pid).join(", ")}
+                            {(t.participants?.length || 0) > 3 ? ` +${t.participants.length - 3} more` : ""}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-[10px] text-white/20">{t.updated_at ? new Date(t.updated_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ""}</p>
                           <span className="text-[9px] text-white/15">{t.participants?.length} agents</span>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
-                {threads.length === 0 && <p className="text-center text-xs text-white/20 py-8">No threads yet — go to Agents tab to start a conversation</p>}
+                      </button>
+                    );
+                  })}
+                  {threads.length === 0 && <p className="text-center text-xs text-white/20 py-8">No threads yet — go to Agents tab to start a conversation</p>}
+                </div>
               </div>
             </div>
           </div>
@@ -1868,15 +2051,8 @@ export default function Dashboard() {
 
         {/* ===== TOOLS TAB ===== */}
         {tab === "tools" && (() => {
-          const [toolsList, setToolsList] = useState<any[]>([]);
-          const [scenarios, setScenarios] = useState<Record<string, any>>({});
-          useEffect(() => {
-            fetch(`${API_URL}/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
-            fetch(`${API_URL}/api/tools/scenarios`).then(r => r.json()).then(setScenarios).catch(() => {});
-          }, []);
-
-          const categories = ["voice", "video", "image", "text", "analytics", "publishing", "automation", "email"];
-          const catLabels: Record<string, { label: string; emoji: string }> = {
+          const toolsCategories = ["voice", "video", "image", "text", "analytics", "publishing", "automation", "email"];
+          const toolsCatLabels: Record<string, { label: string; emoji: string }> = {
             voice: { label: "Voice Generation", emoji: "🎙️" },
             video: { label: "Video Creation", emoji: "🎬" },
             image: { label: "Image & Thumbnails", emoji: "🎨" },
@@ -1895,10 +2071,10 @@ export default function Dashboard() {
               </div>
 
               {/* Tools by category */}
-              {categories.map(cat => {
+              {toolsCategories.map(cat => {
                 const catTools = toolsList.filter(t => t.category === cat);
                 if (catTools.length === 0) return null;
-                const info = catLabels[cat];
+                const info = toolsCatLabels[cat];
                 return (
                   <div key={cat}>
                     <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -1929,10 +2105,10 @@ export default function Dashboard() {
               {/* Make.com Scenarios */}
               <div>
                 <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span>⚡</span> Make.com Scenarios ({Object.keys(scenarios).length})
+                  <span>⚡</span> Make.com Scenarios ({Object.keys(scenariosList).length})
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {Object.entries(scenarios).map(([key, s]: [string, any]) => (
+                  {Object.entries(scenariosList).map(([key, s]: [string, any]) => (
                     <div key={key} className="bg-white/[0.03] border border-white/10 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-lg">{s.icon}</span>
@@ -2004,12 +2180,35 @@ export default function Dashboard() {
         )}
       </Modal>
 
-      <footer className="border-t border-white/10 mt-12 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between text-sm text-white/30">
-          <span>Creator AI Dashboard v1.0.0</span>
-          <span>YouTube Agency Command Center — 3 Channels</span>
+      </main>
+
+      {/* ===== MOBILE BOTTOM NAV ===== */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0d0d0d]/95 backdrop-blur-xl border-t border-white/[0.08] safe-bottom">
+        <div className="flex items-center justify-around h-14 px-1">
+          {mobileBottomTabs.map(item => {
+            const isActive = tab === item.id;
+            const badgeCount = item.id === "inbox" ? (activityData?.pending_escalations || 0) : item.id === "feed" ? (feedUnread.total || 0) : 0;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setTab(item.id)}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 rounded-lg transition-all ${
+                  isActive ? "text-white" : "text-white/35"
+                }`}
+              >
+                <div className="relative">
+                  <item.icon className={`w-5 h-5 ${isActive ? "text-white" : "text-white/35"}`} />
+                  {badgeCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[14px] h-[14px] flex items-center justify-center bg-red-500 rounded-full text-[7px] font-bold px-0.5">{badgeCount}</span>
+                  )}
+                </div>
+                <span className={`text-[9px] font-medium ${isActive ? "text-white" : "text-white/35"}`}>{item.label}</span>
+                {isActive && <div className="w-4 h-0.5 rounded-full bg-white mt-0.5" />}
+              </button>
+            );
+          })}
         </div>
-      </footer>
+      </nav>
     </div>
   );
 }

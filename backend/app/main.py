@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import init_db, async_session
 from app.services.agent_loader import load_agents_to_db
-from app.services.scheduler import init_scheduled_tasks
+from app.services.scheduler import init_scheduled_tasks, start_scheduler, stop_scheduler
 from app.routers import agents, threads
 from app.routers.scheduler import router as scheduler_router
 from app.routers.production import router as production_router
@@ -28,8 +28,10 @@ async def lifespan(app: FastAPI):
     print("Loaded agents into database")
     await init_scheduled_tasks()
     await init_tools()
-    print("Scheduler initialized — agents are autonomous")
+    await start_scheduler()
+    print("Scheduler initialized — agents are running autonomously on cron")
     yield
+    stop_scheduler()
 
 
 app = FastAPI(title="YouTube Empire", lifespan=lifespan)
