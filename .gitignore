@@ -32,6 +32,9 @@ backend/.venv/
 backend/data/
 __pycache__/
 
+# discord bot
+discord-bot/node_modules/
+
 # vercel
 .vercel
 
