@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen, Activity, CircleDot, Play, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen, Activity, CircleDot, Play, AlertTriangle, CheckCircle, XCircle, Globe, KeyRound } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter" | "activity" | "feed";
+type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter" | "activity" | "feed" | "social" | "vault";
+interface SocialAccountInfo { id: string; platform: string; account_name: string; display_name: string; channel_brand: string; managed_by: string; status: string; followers: string; }
+interface VaultEntry { id: string; service: string; account_name: string; category: string; platform_url: string; notes: string; api_key_hint: string; managed_by: string; status: string; }
 
 interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
 interface ActivityData { running_count: number; completed_today: number; pending_escalations: number; total_agents: number; agent_statuses: { id: string; name: string; role: string; department: string; avatar_color: string; status: string; current_task: string }[]; recent_runs: { id: string; agent_id: string; task_name: string; status: string; summary: string | null; completed_at: string | null; thread_id: string | null }[]; escalations: { id: string; agent_id: string; reason: string; severity: string; thread_id: string; created_at: string }[] }
@@ -276,6 +278,11 @@ export default function Dashboard() {
   const [feedUnread, setFeedUnread] = useState<{ total: number; channels: Record<string, number> }>({ total: 0, channels: {} });
   const [feedInput, setFeedInput] = useState("");
 
+  // === Social & Vault State ===
+  const [socialAccounts, setSocialAccounts] = useState<SocialAccountInfo[]>([]);
+  const [vaultEntries, setVaultEntries] = useState<VaultEntry[]>([]);
+  const [socialFilter, setSocialFilter] = useState("all");
+
   // Fetch agents and activity on mount
   useEffect(() => {
     fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
@@ -284,6 +291,8 @@ export default function Dashboard() {
     fetch(`${API_URL}/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
     fetch(`${API_URL}/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
     fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
+    fetch(`${API_URL}/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
+    fetch(`${API_URL}/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
   }, []);
 
   // Poll activity + feed every 10 seconds
@@ -413,6 +422,8 @@ export default function Dashboard() {
     { id:"newsletter", label:"Newsletter", icon:Mail },
     { id:"activity", label:"Activity", icon:Activity },
     { id:"feed", label:"Feed", icon:MessageSquare },
+    { id:"social", label:"Social", icon:Globe },
+    { id:"vault", label:"Vault", icon:KeyRound },
   ];
 
   return (
@@ -1522,6 +1533,157 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* ===== SOCIAL TAB ===== */}
+        {tab === "social" && (() => {
+          const platformEmojis: Record<string, string> = { youtube: "📺", instagram: "📸", facebook: "📘", tiktok: "📱", snapchat: "👻", twitter: "𝕏", linkedin: "💼", threads: "🧵" };
+          const platformNames: Record<string, string> = { youtube: "YouTube", instagram: "Instagram", facebook: "Facebook", tiktok: "TikTok", snapchat: "Snapchat", twitter: "X/Twitter", linkedin: "LinkedIn", threads: "Threads" };
+          const platforms = Object.keys(platformEmojis);
+          const filtered = socialFilter === "all" ? socialAccounts : socialAccounts.filter(a => a.platform === socialFilter);
+          const byPlatform: Record<string, SocialAccountInfo[]> = {};
+          filtered.forEach(a => { if (!byPlatform[a.platform]) byPlatform[a.platform] = []; byPlatform[a.platform].push(a); });
+
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2"><Globe className="w-5 h-5 text-blue-400" /> Social Media Hub</h2>
+                  <p className="text-sm text-white/40 mt-1">{socialAccounts.length} accounts across {platforms.length} platforms — 31 cross-followers each</p>
+                </div>
+              </div>
+
+              {/* Platform stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+                {platforms.map(p => {
+                  const count = socialAccounts.filter(a => a.platform === p).length;
+                  const active = socialAccounts.filter(a => a.platform === p && a.status === "active").length;
+                  return (
+                    <button key={p} onClick={() => setSocialFilter(socialFilter === p ? "all" : p)} className={`p-3 rounded-xl border text-center transition-all ${socialFilter === p ? "bg-white/10 border-white/20" : "bg-white/[0.02] border-white/5 hover:border-white/15"}`}>
+                      <span className="text-lg">{platformEmojis[p]}</span>
+                      <p className="text-xs font-semibold mt-1">{platformNames[p]}</p>
+                      <p className="text-[10px] text-white/30">{count} accounts</p>
+                      <p className="text-[10px] text-green-400">{active} active</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Accounts by platform */}
+              {(socialFilter === "all" ? platforms : [socialFilter]).map(platform => {
+                const accts = byPlatform[platform] || [];
+                if (accts.length === 0) return null;
+                return (
+                  <div key={platform} className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden">
+                    <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">{platformEmojis[platform]}</span>
+                        <h3 className="text-sm font-bold">{platformNames[platform]}</h3>
+                        <span className="text-[10px] text-white/30">({accts.length} accounts)</span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${accts.some(a => a.status === "active") ? "bg-green-500/20 text-green-400" : "bg-amber-500/20 text-amber-400"}`}>
+                        {accts.filter(a => a.status === "active").length > 0 ? `${accts.filter(a => a.status === "active").length} active` : "pending creation"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 p-3">
+                      {accts.map(a => (
+                        <div key={a.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-white/[0.03] border border-white/5 hover:border-white/15 transition-all">
+                          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/10 shrink-0">
+                            <img src={getAgentAvatar(a.managed_by)} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium truncate">@{a.account_name}</p>
+                            <p className="text-[9px] text-white/30 truncate">{a.display_name} &middot; {a.channel_brand?.split("—")[0]?.trim()}</p>
+                          </div>
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded-full shrink-0 ${a.status === "active" ? "bg-green-500/20 text-green-400" : a.status === "pending_creation" ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-white/25"}`}>
+                            {a.status === "pending_creation" ? "pending" : a.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {/* ===== VAULT TAB ===== */}
+        {tab === "vault" && (() => {
+          const categories = ["workstation", "social", "api", "tool", "hosting"];
+          const catLabels: Record<string, { label: string; emoji: string }> = {
+            workstation: { label: "Workstations", emoji: "🖥️" },
+            social: { label: "Social Media", emoji: "📱" },
+            api: { label: "API Keys", emoji: "🔑" },
+            tool: { label: "Tools", emoji: "🔧" },
+            hosting: { label: "Hosting", emoji: "☁️" },
+          };
+          const byCat: Record<string, VaultEntry[]> = {};
+          vaultEntries.forEach(e => { if (!byCat[e.category]) byCat[e.category] = []; byCat[e.category].push(e); });
+
+          return (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold flex items-center gap-2"><KeyRound className="w-5 h-5 text-amber-400" /> Credential Vault</h2>
+                  <p className="text-sm text-white/40 mt-1">{vaultEntries.length} credentials tracked — all logins and API keys in one place</p>
+                </div>
+              </div>
+
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {categories.map(cat => {
+                  const entries = byCat[cat] || [];
+                  const info = catLabels[cat] || { label: cat, emoji: "📄" };
+                  return (
+                    <div key={cat} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                      <span className="text-lg">{info.emoji}</span>
+                      <p className="text-xl font-bold mt-1">{entries.length}</p>
+                      <p className="text-xs text-white/40">{info.label}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Entries by category */}
+              {categories.map(cat => {
+                const entries = byCat[cat] || [];
+                if (entries.length === 0) return null;
+                const info = catLabels[cat] || { label: cat, emoji: "📄" };
+                return (
+                  <div key={cat} className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden">
+                    <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                      <h3 className="text-sm font-bold flex items-center gap-2">
+                        <span>{info.emoji}</span> {info.label}
+                      </h3>
+                      <span className="text-[10px] text-white/30">{entries.length} entries</span>
+                    </div>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-2 border-b border-white/5 text-[10px] text-white/30 uppercase tracking-wider font-medium">
+                        <div className="col-span-3">Service</div><div className="col-span-3">Account</div><div className="col-span-4">Notes</div><div className="col-span-1">Status</div><div className="col-span-1">Agent</div>
+                      </div>
+                      {entries.slice(0, cat === "social" ? 20 : 50).map(e => (
+                        <div key={e.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 px-5 py-2 border-b border-white/5 hover:bg-white/[0.02] items-center text-xs">
+                          <div className="sm:col-span-3 font-medium truncate">{e.service}</div>
+                          <div className="sm:col-span-3 text-white/50 truncate font-mono text-[10px]">{e.account_name}</div>
+                          <div className="sm:col-span-4 text-white/30 truncate text-[10px]">{e.notes}</div>
+                          <div className="sm:col-span-1">
+                            <span className={`text-[8px] px-1.5 py-0.5 rounded-full ${e.status === "active" ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/25"}`}>{e.status}</span>
+                          </div>
+                          <div className="sm:col-span-1">
+                            {e.managed_by && <img src={getAgentAvatar(e.managed_by)} className="w-5 h-5 rounded-full object-cover" alt="" />}
+                          </div>
+                        </div>
+                      ))}
+                      {cat === "social" && entries.length > 20 && (
+                        <div className="px-5 py-3 text-center text-[10px] text-white/20">Showing 20 of {entries.length} — all entries tracked in the database</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       <Modal open={!!editItem} onClose={() => setEditItem(null)} title="Edit Content">
