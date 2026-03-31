@@ -8,6 +8,7 @@ from app.routers import agents, threads
 from app.routers.scheduler import router as scheduler_router
 from app.routers.production import router as production_router
 from app.routers.feed import router as feed_router
+from app.routers.collab import router as collab_router
 from app.config import CORS_ORIGINS
 import os
 
@@ -41,6 +42,7 @@ app.include_router(threads.router)
 app.include_router(scheduler_router)
 app.include_router(production_router)
 app.include_router(feed_router)
+app.include_router(collab_router)
 
 
 @app.get("/api/health")
