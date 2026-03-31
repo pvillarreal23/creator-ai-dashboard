@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen } from "lucide-react";
+import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen, Activity, CircleDot, Play, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter";
+type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter" | "activity";
 
 interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
+interface ActivityData { running_count: number; completed_today: number; pending_escalations: number; total_agents: number; agent_statuses: { id: string; name: string; role: string; department: string; avatar_color: string; status: string; current_task: string }[]; recent_runs: { id: string; agent_id: string; task_name: string; status: string; summary: string | null; completed_at: string | null; thread_id: string | null }[]; escalations: { id: string; agent_id: string; reason: string; severity: string; thread_id: string; created_at: string }[] }
+interface ScheduledTaskInfo { id: string; agent_id: string; agent_name: string; name: string; cron_expression: string; enabled: boolean; last_run: string | null; category: string }
 interface ThreadMsg { id: string; sender_type: "user" | "agent"; sender_agent_id: string | null; sender_name?: string; content: string; created_at: string; status: string; }
 interface Thread { id: string; subject: string; participants: string[]; messages: ThreadMsg[]; status: string; updated_at: string; }
 
@@ -262,11 +264,35 @@ export default function Dashboard() {
   const [agentView, setAgentView] = useState<"chat" | "directory" | "departments" | "org">("chat");
   const msgEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch agents on mount
+  // === Activity Tab State ===
+  const [activityData, setActivityData] = useState<ActivityData | null>(null);
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTaskInfo[]>([]);
+
+  // Fetch agents and activity on mount
   useEffect(() => {
     fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
     fetch(`${API_URL}/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
+    fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+    fetch(`${API_URL}/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
   }, []);
+
+  // Poll activity data every 10 seconds
+  useEffect(() => {
+    const poll = setInterval(() => {
+      fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+    }, 10000);
+    return () => clearInterval(poll);
+  }, []);
+
+  const resolveEscalation = async (id: string) => {
+    await fetch(`${API_URL}/api/scheduler/escalations/${id}/resolve`, { method: "POST" }).catch(() => {});
+    fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+  };
+
+  const triggerTask = async (id: string) => {
+    await fetch(`${API_URL}/api/scheduler/tasks/${id}/run`, { method: "POST" }).catch(() => {});
+    setTimeout(() => fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {}), 2000);
+  };
 
   // Poll active thread for new messages
   useEffect(() => {
@@ -352,6 +378,7 @@ export default function Dashboard() {
     { id:"analytics", label:"Analytics", icon:BarChart3 },
     { id:"agents", label:"Agents", icon:MessageSquare },
     { id:"newsletter", label:"Newsletter", icon:Mail },
+    { id:"activity", label:"Activity", icon:Activity },
   ];
 
   return (
@@ -364,7 +391,7 @@ export default function Dashboard() {
             <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/60 hidden sm:inline">Agency Dashboard</span>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-lg hover:bg-white/5"><Bell className="w-5 h-5 text-white/60" /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" /></button>
+            <button onClick={() => setTab("activity")} className="relative p-2 rounded-lg hover:bg-white/5"><Bell className="w-5 h-5 text-white/60" />{(activityData?.pending_escalations || 0) > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center bg-red-500 rounded-full text-[9px] font-bold px-1">{activityData?.pending_escalations}</span>}</button>
             <button className="p-2 rounded-lg hover:bg-white/5"><Settings className="w-5 h-5 text-white/60" /></button>
             <div className="w-px h-6 bg-white/10 hidden sm:block" />
             <div className="flex items-center gap-2.5 hidden sm:flex">
@@ -391,6 +418,52 @@ export default function Dashboard() {
 
         {tab === "overview" && (
           <div className="space-y-8">
+            {/* Autopilot Status Bar */}
+            {activityData && (
+              <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/5 to-cyan-500/10 border border-purple-500/20 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-sm font-semibold">Autopilot Active</span>
+                    <span className="text-[10px] text-white/30">— {activityData.total_agents} agents deployed</span>
+                  </div>
+                  <button onClick={() => setTab("activity")} className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">View All <ChevronRight className="w-3 h-3" /></button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="flex items-center gap-2">
+                    <Play className="w-4 h-4 text-green-400" />
+                    <div><p className="text-lg font-bold">{activityData.running_count}</p><p className="text-[10px] text-white/30">Running Now</p></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-blue-400" />
+                    <div><p className="text-lg font-bold">{activityData.completed_today}</p><p className="text-[10px] text-white/30">Completed Today</p></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-400" />
+                    <div><p className="text-lg font-bold">{activityData.pending_escalations}</p><p className="text-[10px] text-white/30">Need Your Review</p></div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-purple-400" />
+                    <div><p className="text-lg font-bold">{scheduledTasks.filter(t => t.enabled).length}</p><p className="text-[10px] text-white/30">Active Tasks</p></div>
+                  </div>
+                </div>
+                {activityData.escalations.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <p className="text-[10px] text-amber-400 font-semibold uppercase tracking-wider mb-2">Needs Your Attention</p>
+                    {activityData.escalations.slice(0, 3).map(e => (
+                      <div key={e.id} className="flex items-center justify-between py-1.5">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="w-3 h-3 text-amber-400" />
+                          <span className="text-xs text-white/60">{e.reason}</span>
+                        </div>
+                        <button onClick={() => resolveEscalation(e.id)} className="text-[10px] text-green-400 hover:text-green-300 px-2 py-0.5 border border-green-500/20 rounded">Resolve</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {stats.map(s => <StatCard key={s.label} {...s} />)}
             </div>
@@ -1151,6 +1224,159 @@ export default function Dashboard() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== ACTIVITY TAB ===== */}
+        {tab === "activity" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2"><Activity className="w-5 h-5 text-purple-400" /> Workforce Activity</h2>
+                <p className="text-sm text-white/40 mt-1">Real-time view of what every agent is doing — Goal: 1B subscribers</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-xs text-green-400 font-medium">Autopilot ON</span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            {activityData && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-green-500/5 border border-green-500/20 rounded-xl p-4">
+                  <Play className="w-4 h-4 text-green-400 mb-2" />
+                  <p className="text-2xl font-bold">{activityData.running_count}</p>
+                  <p className="text-xs text-white/40">Running Now</p>
+                </div>
+                <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                  <CheckCircle className="w-4 h-4 text-blue-400 mb-2" />
+                  <p className="text-2xl font-bold">{activityData.completed_today}</p>
+                  <p className="text-xs text-white/40">Completed Today</p>
+                </div>
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 mb-2" />
+                  <p className="text-2xl font-bold">{activityData.pending_escalations}</p>
+                  <p className="text-xs text-white/40">Needs Review</p>
+                </div>
+                <div className="bg-purple-500/5 border border-purple-500/20 rounded-xl p-4">
+                  <Users className="w-4 h-4 text-purple-400 mb-2" />
+                  <p className="text-2xl font-bold">{activityData.total_agents}</p>
+                  <p className="text-xs text-white/40">Active Agents</p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Agent Status Board */}
+              <div className="lg:col-span-2">
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Agent Status Board</h3>
+                    <span className="text-[10px] text-white/30">{activityData?.agent_statuses?.length || 0} agents</span>
+                  </div>
+                  <div className="max-h-[500px] overflow-y-auto divide-y divide-white/5">
+                    {activityData?.agent_statuses?.map(a => (
+                      <div key={a.id} className="flex items-center gap-3 px-5 py-2.5 hover:bg-white/[0.02]">
+                        <div className="w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0" style={{ borderColor: a.avatar_color + "60" }}>
+                          <img src={getAgentAvatar(a.id)} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium truncate">{getHumanName(a.id) || a.name}</span>
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${a.status === "working" ? "bg-green-400 animate-pulse" : "bg-white/20"}`} />
+                          </div>
+                          <p className="text-[10px] text-white/30 truncate">{a.current_task}</p>
+                        </div>
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-medium ${a.status === "working" ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/25"}`}>
+                          {a.status === "working" ? "Working" : "Idle"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column: Escalations + Recent Activity */}
+              <div className="space-y-4">
+                {/* Escalation Inbox */}
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-amber-500/10 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-400" /> Escalations</h3>
+                    <span className="text-[10px] text-amber-400">{activityData?.escalations?.length || 0} pending</span>
+                  </div>
+                  <div className="p-3 space-y-2 max-h-48 overflow-y-auto">
+                    {(!activityData?.escalations || activityData.escalations.length === 0) ? (
+                      <p className="text-xs text-white/20 text-center py-4">No escalations — all clear</p>
+                    ) : activityData.escalations.map(e => (
+                      <div key={e.id} className="bg-white/5 rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs text-white/60">{e.reason}</p>
+                            <p className="text-[10px] text-white/20 mt-1">{e.agent_id}</p>
+                          </div>
+                          <button onClick={() => resolveEscalation(e.id)} className="text-[10px] text-green-400 hover:text-green-300 px-2 py-1 border border-green-500/20 rounded shrink-0">
+                            Resolve
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Recent Activity Feed */}
+                <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/10">
+                    <h3 className="text-sm font-semibold">Recent Activity</h3>
+                  </div>
+                  <div className="p-3 space-y-2 max-h-64 overflow-y-auto">
+                    {activityData?.recent_runs?.map(r => (
+                      <div key={r.id} className="flex items-start gap-2 py-1.5">
+                        <span className={`mt-0.5 ${r.status === "complete" ? "text-green-400" : r.status === "failed" ? "text-red-400" : r.status === "escalated" ? "text-amber-400" : "text-blue-400"}`}>
+                          {r.status === "complete" ? <CheckCircle className="w-3 h-3" /> : r.status === "failed" ? <XCircle className="w-3 h-3" /> : r.status === "escalated" ? <AlertTriangle className="w-3 h-3" /> : <CircleDot className="w-3 h-3" />}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-white/60 truncate">{r.task_name}</p>
+                          {r.summary && <p className="text-[10px] text-white/25 truncate mt-0.5">{r.summary}</p>}
+                        </div>
+                      </div>
+                    ))}
+                    {(!activityData?.recent_runs || activityData.recent_runs.length === 0) && (
+                      <p className="text-xs text-white/20 text-center py-4">No activity yet — trigger a task to start</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Scheduled Tasks Table */}
+            <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+              <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Scheduled Tasks ({scheduledTasks.length})</h3>
+                <span className="text-[10px] text-white/30">{scheduledTasks.filter(t => t.enabled).length} active</span>
+              </div>
+              <div className="max-h-[400px] overflow-y-auto">
+                <div className="hidden sm:grid grid-cols-12 gap-2 px-5 py-2 border-b border-white/5 text-[10px] text-white/30 uppercase tracking-wider font-medium">
+                  <div className="col-span-3">Task</div><div className="col-span-2">Agent</div><div className="col-span-2">Schedule</div><div className="col-span-2">Last Run</div><div className="col-span-1">Status</div><div className="col-span-2 text-right">Action</div>
+                </div>
+                {scheduledTasks.map(t => (
+                  <div key={t.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 px-5 py-2.5 border-b border-white/5 hover:bg-white/[0.02] items-center">
+                    <div className="sm:col-span-3 text-xs font-medium truncate">{t.name}</div>
+                    <div className="sm:col-span-2 text-[11px] text-white/40 truncate">{t.agent_name}</div>
+                    <div className="sm:col-span-2 text-[10px] text-white/30 font-mono">{t.cron_expression}</div>
+                    <div className="sm:col-span-2 text-[10px] text-white/25">{t.last_run ? new Date(t.last_run).toLocaleString() : "Never"}</div>
+                    <div className="sm:col-span-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${t.enabled ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/25"}`}>
+                        {t.enabled ? "On" : "Off"}
+                      </span>
+                    </div>
+                    <div className="sm:col-span-2 flex justify-end gap-1">
+                      <button onClick={() => triggerTask(t.id)} className="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-0.5 border border-blue-500/20 rounded">Run Now</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
