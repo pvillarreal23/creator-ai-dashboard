@@ -12,6 +12,7 @@ from app.routers.collab import router as collab_router
 from app.routers.workspace import router as workspace_router
 from app.routers.social import router as social_router
 from app.routers.vault import router as vault_router
+from app.routers.tools import router as tools_router, init_tools
 from app.config import CORS_ORIGINS
 import os
 
@@ -26,6 +27,7 @@ async def lifespan(app: FastAPI):
         await load_agents_to_db(session)
     print("Loaded agents into database")
     await init_scheduled_tasks()
+    await init_tools()
     print("Scheduler initialized — agents are autonomous")
     yield
 
@@ -49,6 +51,7 @@ app.include_router(collab_router)
 app.include_router(workspace_router)
 app.include_router(social_router)
 app.include_router(vault_router)
+app.include_router(tools_router)
 
 
 @app.get("/api/health")
