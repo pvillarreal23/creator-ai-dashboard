@@ -780,10 +780,11 @@ export default function Dashboard() {
             {/* COMMAND CENTER — Single prompt → CEO delegates */}
             {agentView === "chat" && (
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                {/* Thread list */}
+                {/* Thread list — email inbox style */}
                 <div className="lg:col-span-1 bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                  <div className="p-3 border-b border-white/10">
-                    <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Threads</h3>
+                  <div className="p-3 border-b border-white/10 flex items-center justify-between">
+                    <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Inbox</h3>
+                    <span className="text-[9px] text-white/20">{threads.length} threads</span>
                   </div>
                   <div className="max-h-[500px] overflow-y-auto">
                     <button onClick={() => setActiveThread(null)} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${!activeThread ? "bg-white/10" : ""}`}>
@@ -792,14 +793,34 @@ export default function Dashboard() {
                         <span className="text-sm text-blue-400 font-medium">New Task</span>
                       </div>
                     </button>
-                    {threads.map(t => (
-                      <button key={t.id} onClick={() => {
-                        fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {});
-                      }} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${activeThread?.id === t.id ? "bg-white/10" : ""}`}>
-                        <p className="text-sm text-white truncate">{t.subject}</p>
-                        <p className="text-[10px] text-white/30 mt-0.5">{t.participants?.length || 0} agents</p>
-                      </button>
-                    ))}
+                    {threads.map(t => {
+                      const firstAgent = t.participants?.[0];
+                      const isActive = activeThread?.id === t.id;
+                      return (
+                        <button key={t.id} onClick={() => {
+                          fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {});
+                        }} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${isActive ? "bg-white/10 border-l-2 border-l-purple-500" : ""}`}>
+                          <div className="flex items-start gap-2.5">
+                            <div className="flex -space-x-1.5 shrink-0 mt-0.5">
+                              {t.participants?.slice(0, 3).map((pid: string) => (
+                                <img key={pid} src={getAgentAvatar(pid)} className="w-6 h-6 rounded-full object-cover ring-1 ring-[#0a0a0a]" alt="" />
+                              ))}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[11px] font-semibold truncate">{t.subject?.replace('[Strategy] ','').replace('PEDRO DIRECTIVE: ','').replace('PRIORITY: ','')}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[9px] text-white/25">{t.participants?.length || 0} agents</span>
+                                <span className="text-[9px] text-white/15">·</span>
+                                <span className="text-[9px] text-white/20">{t.updated_at ? new Date(t.updated_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                              </div>
+                            </div>
+                            <div className="w-2 h-2 rounded-full bg-purple-500 shrink-0 mt-1.5" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -884,62 +905,71 @@ export default function Dashboard() {
 
                     </div>
                   ) : (
-                    /* Active thread */
+                    /* Active thread — email chain style */
                     <>
-                      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-semibold">{activeThread.subject}</h3>
-                          <div className="flex gap-1 mt-1">
+                      <div className="px-5 py-3 border-b border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <button onClick={() => setActiveThread(null)} className="text-xs text-white/30 hover:text-white/60 flex items-center gap-1"><ChevronRight className="w-3 h-3 rotate-180" /> Back to Inbox</button>
+                          <span className="text-[10px] text-white/20">{activeThread.messages?.length || 0} messages</span>
+                        </div>
+                        <h3 className="text-base font-bold">{activeThread.subject}</h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] text-white/30">To:</span>
+                          <div className="flex flex-wrap gap-1">
                             {activeThread.participants?.map(pid => {
                               const a = getAgentById(pid);
                               return a ? (
-                                <span key={pid} className="inline-flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded">
-                                  <img src={getAgentAvatar(pid)} className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: a.avatar_color }} />
-                                  {getHumanName(pid)?.split(" ")[0] || a.name.split(" ")[0]}
+                                <span key={pid} className="inline-flex items-center gap-1.5 text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded-full">
+                                  <img src={getAgentAvatar(pid)} className="w-4 h-4 rounded-full object-cover" />
+                                  {getHumanName(pid) || a.name}
                                 </span>
                               ) : null;
                             })}
                           </div>
                         </div>
-                        <button onClick={() => setActiveThread(null)} className="text-xs text-white/30 hover:text-white/60">Back</button>
                       </div>
-                      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                        {activeThread.messages?.map(msg => {
+                      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                        {activeThread.messages?.map((msg, idx) => {
                           const isUser = msg.sender_type === "user";
                           const agent = msg.sender_agent_id ? getAgentById(msg.sender_agent_id) : null;
+                          const tier = msg.sender_agent_id ? getAgentTier(msg.sender_agent_id) : null;
+                          const ts = tier ? TIER_STYLES[tier] : null;
                           return (
-                            <div key={msg.id} className={`flex gap-3 ${isUser ? "justify-end" : ""}`}>
-                              {!isUser && (
-                                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-white/10" style={{ backgroundColor: agent?.avatar_color || "#6366f1" }}>
-                                  <img src={getAgentAvatar(msg.sender_agent_id || "")} alt="" className="w-full h-full object-cover" />
-                                </div>
-                              )}
-                              <div className={`max-w-[75%]`}>
-                                {!isUser && (
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[11px] font-semibold text-white/60">{(msg.sender_agent_id && getHumanName(msg.sender_agent_id)) || agent?.name || msg.sender_name}</span>
-                                    {agent && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: agent.avatar_color + "20", color: agent.avatar_color }}>{agent.name}</span>}
+                            <div key={msg.id} className={`border rounded-xl overflow-hidden ${isUser ? "border-purple-500/20 bg-purple-500/[0.03]" : "border-white/10 bg-white/[0.02]"}`}>
+                              {/* Email header */}
+                              <div className={`px-4 py-2.5 border-b ${isUser ? "border-purple-500/10 bg-purple-500/[0.03]" : "border-white/5 bg-white/[0.02]"} flex items-center justify-between`}>
+                                <div className="flex items-center gap-3">
+                                  {isUser ? (
+                                    <img src="/avatars/pedro.jpg" className="w-8 h-8 rounded-full object-cover ring-2 ring-purple-500/50" alt="" />
+                                  ) : (
+                                    <img src={getAgentAvatar(msg.sender_agent_id || "")} className={`w-8 h-8 rounded-full object-cover ring-2 ${ts?.ring || "ring-white/10"}`} alt="" />
+                                  )}
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-semibold">{isUser ? "Pedro (You)" : getHumanName(msg.sender_agent_id || "") || agent?.name || msg.sender_name}</span>
+                                      {agent && <span className={`text-[8px] px-1.5 py-0 rounded-full border font-medium ${ts?.badge || ""}`}>{tier}</span>}
+                                      {agent && <span className="text-[9px] text-white/25">{agent.name}</span>}
+                                    </div>
+                                    <span className="text-[10px] text-white/20">{msg.created_at ? new Date(msg.created_at).toLocaleString() : ""}</span>
                                   </div>
-                                )}
-                                <div className={`rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${isUser ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white" : "bg-white/5 border border-white/10 text-white/80"}`}>
-                                  {msg.content}
                                 </div>
+                                <span className="text-[9px] text-white/15">#{idx + 1}</span>
                               </div>
-                              {isUser && (
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-                                  <User className="w-4 h-4" />
-                                </div>
-                              )}
+                              {/* Email body */}
+                              <div className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-white/75">
+                                {msg.content}
+                              </div>
                             </div>
                           );
                         })}
                         <div ref={msgEndRef} />
                       </div>
-                      <div className="px-4 py-3 border-t border-white/10">
+                      <div className="px-5 py-3 border-t border-white/10 bg-white/[0.02]">
+                        <p className="text-[10px] text-white/20 mb-2">Reply to thread</p>
                         <div className="flex gap-2">
-                          <input type="text" value={agentPrompt} onChange={e => setAgentPrompt(e.target.value)} onKeyDown={e => { if (e.key === "Enter") sendReply(); }} placeholder="Reply..." className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50" />
-                          <button onClick={sendReply} disabled={agentSending || !agentPrompt.trim()} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-all">
-                            <Send className="w-4 h-4" />
+                          <input type="text" value={agentPrompt} onChange={e => setAgentPrompt(e.target.value)} onKeyDown={e => { if (e.key === "Enter") sendReply(); }} placeholder="Type your response..." className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50" />
+                          <button onClick={sendReply} disabled={agentSending || !agentPrompt.trim()} className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                            <Send className="w-3 h-3" /> Send
                           </button>
                         </div>
                       </div>
