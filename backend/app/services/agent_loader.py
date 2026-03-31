@@ -66,6 +66,7 @@ DEPARTMENT_MAP = {
     "community-manager-agent": "monetization",
     "web-designer-agent": "operations",
     "web-developer-agent": "operations",
+    "cfo-agent": "executive",
 }
 
 

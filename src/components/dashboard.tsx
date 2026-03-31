@@ -50,6 +50,7 @@ const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "fema
   "compliance-officer-agent":         { humanName: "David Reeves",     gender: "male"   },
   "web-designer-agent":               { humanName: "Luna Chang",       gender: "female" },
   "web-developer-agent":              { humanName: "Alex Petrov",      gender: "male"   },
+  "cfo-agent":                        { humanName: "Victoria Steele",  gender: "female" },
 };
 
 function getAgentAvatar(agentId: string): string {
