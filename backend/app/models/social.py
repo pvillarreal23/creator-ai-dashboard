@@ -66,10 +66,11 @@ PLATFORMS = {
     "youtube": {"name": "YouTube", "emoji": "📺", "post_types": ["video", "short", "community_post", "live"], "max_post_length": 5000},
     "instagram": {"name": "Instagram", "emoji": "📸", "post_types": ["post", "reel", "story", "carousel"], "max_post_length": 2200},
     "snapchat": {"name": "Snapchat", "emoji": "👻", "post_types": ["snap", "story", "spotlight"], "max_post_length": 250},
-    "tiktok": {"name": "TikTok", "emoji": "🎵", "post_types": ["video", "photo", "live"], "max_post_length": 4000},
+    "tiktok": {"name": "TikTok", "emoji": "📱", "post_types": ["video", "photo", "live"], "max_post_length": 4000},
     "twitter": {"name": "X (Twitter)", "emoji": "𝕏", "post_types": ["tweet", "thread", "space"], "max_post_length": 280},
     "linkedin": {"name": "LinkedIn", "emoji": "💼", "post_types": ["post", "article", "newsletter"], "max_post_length": 3000},
     "threads": {"name": "Threads", "emoji": "🧵", "post_types": ["post", "reply"], "max_post_length": 500},
+    "facebook": {"name": "Facebook", "emoji": "📘", "post_types": ["post", "reel", "story", "live", "group_post"], "max_post_length": 63206},
 }
 
 # Which agents manage which platform focus
@@ -81,4 +82,5 @@ PLATFORM_AGENTS = {
     "twitter": ["social-media-manager-agent", "community-manager-agent"],
     "linkedin": ["social-media-manager-agent", "newsletter-strategist-agent"],
     "threads": ["social-media-manager-agent", "community-manager-agent"],
+    "facebook": ["social-media-manager-agent", "community-manager-agent", "newsletter-strategist-agent"],
 }
