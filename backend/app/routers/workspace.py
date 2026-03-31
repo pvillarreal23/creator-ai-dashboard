@@ -12,7 +12,7 @@ from app.database import get_db, async_session
 from app.models.workspace import AgentWorkspace, ContentArtifact, AgentPipeline, AGENT_ARTIFACT_TYPES
 from app.models.agent import Agent
 from app.models.thread import Thread, Message
-from app.services.claude_service import generate_agent_response
+from app.services.claude_service import generate_agent_response, generate_agent_response_async
 from app.services.make_integration import trigger_make_scenario
 
 router = APIRouter(prefix="/api/workspace", tags=["workspace"])
@@ -117,7 +117,7 @@ async def create_artifact(
             prompt += ". Use your role's output format. Be specific, detailed, and production-ready."
 
             try:
-                content = generate_agent_response(
+                content = await generate_agent_response_async(
                     system_prompt=a.system_prompt,
                     thread_messages=[{"id": "gen", "sender_type": "user", "sender_agent_id": None,
                                       "content": prompt, "created_at": datetime.now(timezone.utc).isoformat(), "status": "sent"}],
@@ -262,7 +262,7 @@ async def push_artifact(
                     thread_msgs = [{"id": msg.id, "sender_type": "agent", "sender_agent_id": agent_id,
                                     "sender_name": src.name, "content": msg.content,
                                     "created_at": datetime.now(timezone.utc).isoformat(), "status": "sent"}]
-                    response = generate_agent_response(
+                    response = await generate_agent_response_async(
                         system_prompt=tgt.system_prompt,
                         thread_messages=thread_msgs,
                         agent_id=data.target_agent_id,
@@ -347,7 +347,7 @@ async def auto_produce(
             prompt += " Make it production-ready. Use your full output format."
 
             try:
-                content = generate_agent_response(
+                content = await generate_agent_response_async(
                     system_prompt=a.system_prompt,
                     thread_messages=[{"id": "ap", "sender_type": "user", "sender_agent_id": None,
                                       "content": prompt, "created_at": datetime.now(timezone.utc).isoformat(), "status": "sent"}],

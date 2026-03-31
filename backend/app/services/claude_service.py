@@ -64,11 +64,9 @@ def generate_agent_response(
     thread_messages: list[dict],
     agent_id: str,
 ) -> str:
-    """Generate a response from an agent using Claude."""
+    """Generate a response from an agent using Claude. Synchronous — use generate_agent_response_async for async contexts."""
     client = get_client()
     messages = format_thread_for_agent(thread_messages, agent_id)
-
-    # Inject current date into every agent's system prompt
     full_system_prompt = system_prompt + get_date_context()
 
     response = client.messages.create(
@@ -78,6 +76,19 @@ def generate_agent_response(
         messages=messages,
     )
     return response.content[0].text
+
+
+async def generate_agent_response_async(
+    system_prompt: str,
+    thread_messages: list[dict],
+    agent_id: str,
+) -> str:
+    """Async wrapper — runs the blocking Claude call in a thread pool so it doesn't block the event loop."""
+    import asyncio
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        None, generate_agent_response, system_prompt, thread_messages, agent_id
+    )
 
 
 def analyze_routing(
