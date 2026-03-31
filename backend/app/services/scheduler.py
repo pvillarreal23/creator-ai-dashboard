@@ -94,6 +94,16 @@ async def run_scheduled_task(task_id: str):
             run.status = "complete"
             run.completed_at = datetime.now(timezone.utc)
 
+            # Post to live feed
+            from app.routers.feed import agent_post
+            await agent_post(
+                agent_id=task.agent_id,
+                content=f"**{task.name}** completed.\n\n{response_text[:300]}",
+                channel=task.category if task.category in ("content", "operations", "analytics", "monetization") else "general",
+                message_type="report",
+                thread_id=thread.id,
+            )
+
             # Check for escalation
             lower_response = response_text.lower()
             escalation_reasons = [kw for kw in ESCALATION_KEYWORDS if kw in lower_response]
@@ -107,6 +117,15 @@ async def run_scheduled_task(task_id: str):
                 )
                 db.add(escalation)
                 run.status = "escalated"
+
+                await agent_post(
+                    agent_id=task.agent_id,
+                    content=f"**Escalation** — {task.name}\n\n{', '.join(escalation_reasons[:3])}. Needs your review.",
+                    channel="alerts",
+                    message_type="alert",
+                    severity="urgent",
+                    thread_id=thread.id,
+                )
 
             # Route to other agents if needed
             all_agents_result = await db.execute(select(Agent))

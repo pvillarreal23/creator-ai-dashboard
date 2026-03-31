@@ -2,11 +2,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown, Mail, Sparkles, TrendingUp, UserPlus, Megaphone, PenTool, MailOpen, Activity, CircleDot, Play, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter" | "activity";
+type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents" | "newsletter" | "activity" | "feed";
 
 interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
 interface ActivityData { running_count: number; completed_today: number; pending_escalations: number; total_agents: number; agent_statuses: { id: string; name: string; role: string; department: string; avatar_color: string; status: string; current_task: string }[]; recent_runs: { id: string; agent_id: string; task_name: string; status: string; summary: string | null; completed_at: string | null; thread_id: string | null }[]; escalations: { id: string; agent_id: string; reason: string; severity: string; thread_id: string; created_at: string }[] }
 interface ScheduledTaskInfo { id: string; agent_id: string; agent_name: string; name: string; cron_expression: string; enabled: boolean; last_run: string | null; category: string }
+interface FeedMsg { id: string; agent_id: string; agent_name: string; agent_color: string; channel: string; content: string; message_type: string; severity: string; thread_id: string | null; pinned: boolean; created_at: string; read: boolean }
+const FEED_CHANNELS: Record<string, { name: string; emoji: string }> = { general: { name: "General", emoji: "💬" }, content: { name: "Content", emoji: "📝" }, operations: { name: "Operations", emoji: "⚙️" }, analytics: { name: "Analytics", emoji: "📊" }, monetization: { name: "Revenue", emoji: "💰" }, alerts: { name: "Alerts", emoji: "🚨" }, wins: { name: "Wins", emoji: "🏆" } };
 interface ThreadMsg { id: string; sender_type: "user" | "agent"; sender_agent_id: string | null; sender_name?: string; content: string; created_at: string; status: string; }
 interface Thread { id: string; subject: string; participants: string[]; messages: ThreadMsg[]; status: string; updated_at: string; }
 
@@ -268,21 +270,31 @@ export default function Dashboard() {
   const [activityData, setActivityData] = useState<ActivityData | null>(null);
   const [scheduledTasks, setScheduledTasks] = useState<ScheduledTaskInfo[]>([]);
 
+  // === Feed State ===
+  const [feedMessages, setFeedMessages] = useState<FeedMsg[]>([]);
+  const [feedChannel, setFeedChannel] = useState("all");
+  const [feedUnread, setFeedUnread] = useState<{ total: number; channels: Record<string, number> }>({ total: 0, channels: {} });
+  const [feedInput, setFeedInput] = useState("");
+
   // Fetch agents and activity on mount
   useEffect(() => {
     fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
     fetch(`${API_URL}/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
     fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
     fetch(`${API_URL}/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
+    fetch(`${API_URL}/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
   }, []);
 
-  // Poll activity data every 10 seconds
+  // Poll activity + feed every 10 seconds
   useEffect(() => {
     const poll = setInterval(() => {
       fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+      fetch(`${API_URL}/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+      fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
     }, 10000);
     return () => clearInterval(poll);
-  }, []);
+  }, [feedChannel]);
 
   const resolveEscalation = async (id: string) => {
     await fetch(`${API_URL}/api/scheduler/escalations/${id}/resolve`, { method: "POST" }).catch(() => {});
@@ -292,6 +304,27 @@ export default function Dashboard() {
   const triggerTask = async (id: string) => {
     await fetch(`${API_URL}/api/scheduler/tasks/${id}/run`, { method: "POST" }).catch(() => {});
     setTimeout(() => fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {}), 2000);
+  };
+
+  const switchFeedChannel = (ch: string) => {
+    setFeedChannel(ch);
+    fetch(`${API_URL}/api/feed/messages?channel=${ch}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+  };
+
+  const sendFeedMessage = async () => {
+    if (!feedInput.trim()) return;
+    await fetch(`${API_URL}/api/feed/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: feedInput, channel: feedChannel === "all" ? "general" : feedChannel }),
+    }).catch(() => {});
+    setFeedInput("");
+    fetch(`${API_URL}/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+  };
+
+  const markAllRead = async () => {
+    await fetch(`${API_URL}/api/feed/mark_all_read?channel=${feedChannel}`, { method: "POST" }).catch(() => {});
+    fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
   };
 
   // Poll active thread for new messages
@@ -379,6 +412,7 @@ export default function Dashboard() {
     { id:"agents", label:"Agents", icon:MessageSquare },
     { id:"newsletter", label:"Newsletter", icon:Mail },
     { id:"activity", label:"Activity", icon:Activity },
+    { id:"feed", label:"Feed", icon:MessageSquare },
   ];
 
   return (
@@ -1377,6 +1411,113 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ===== FEED TAB ===== */}
+        {tab === "feed" && (
+          <div className="flex gap-4 h-[calc(100vh-180px)]">
+            {/* Channel sidebar */}
+            <div className="w-48 shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
+              <div className="p-3 border-b border-white/10">
+                <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Channels</h3>
+              </div>
+              <div className="flex-1 overflow-y-auto p-1">
+                <button onClick={() => switchFeedChannel("all")} className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center justify-between ${feedChannel === "all" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70 hover:bg-white/5"}`}>
+                  <span>All Messages</span>
+                  {feedUnread.total > 0 && <span className="bg-red-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold">{feedUnread.total}</span>}
+                </button>
+                {Object.entries(FEED_CHANNELS).map(([key, ch]) => (
+                  <button key={key} onClick={() => switchFeedChannel(key)} className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center justify-between ${feedChannel === key ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70 hover:bg-white/5"}`}>
+                    <span>{ch.emoji} {ch.name}</span>
+                    {(feedUnread.channels[key] || 0) > 0 && <span className="bg-red-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold">{feedUnread.channels[key]}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Message stream */}
+            <div className="flex-1 bg-white/5 border border-white/10 rounded-xl flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{feedChannel === "all" ? "📡" : FEED_CHANNELS[feedChannel]?.emoji || "💬"}</span>
+                  <h3 className="text-sm font-semibold">{feedChannel === "all" ? "All Channels" : FEED_CHANNELS[feedChannel]?.name || feedChannel}</h3>
+                  <span className="text-[10px] text-white/20">— live feed from your agents</span>
+                </div>
+                <button onClick={markAllRead} className="text-[10px] text-white/30 hover:text-white/60 px-2 py-1 border border-white/10 rounded">Mark all read</button>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+                {feedMessages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-white/20">
+                    <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="text-sm">No messages yet</p>
+                    <p className="text-[10px] mt-1">Agent updates will appear here as they work</p>
+                  </div>
+                ) : (
+                  feedMessages.map(msg => {
+                    const severityColors: Record<string, string> = {
+                      info: "border-white/5",
+                      warning: "border-amber-500/20 bg-amber-500/[0.02]",
+                      urgent: "border-red-500/20 bg-red-500/[0.02]",
+                      celebration: "border-green-500/20 bg-green-500/[0.02]",
+                    };
+                    const typeIcons: Record<string, string> = {
+                      update: "📋", alert: "🚨", win: "🏆", request: "❓", report: "📊", milestone: "🎯",
+                    };
+                    return (
+                      <div key={msg.id} className={`border rounded-lg p-3 ${severityColors[msg.severity] || severityColors.info} ${!msg.read ? "ring-1 ring-white/10" : ""}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden ring-2 shrink-0" style={{ borderColor: msg.agent_color + "60" }}>
+                            {msg.agent_id === "pedro" ? (
+                              <img src="/avatars/pedro.jpg" className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <img src={getAgentAvatar(msg.agent_id)} className="w-full h-full object-cover" alt="" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-semibold">{msg.agent_id === "pedro" ? "Pedro (You)" : getHumanName(msg.agent_id) || msg.agent_name}</span>
+                              <span className="text-[9px] text-white/20">{msg.agent_id !== "pedro" ? msg.agent_name : ""}</span>
+                              <span className="text-[8px] px-1.5 py-0 rounded border border-white/10 text-white/20">{FEED_CHANNELS[msg.channel]?.emoji} {FEED_CHANNELS[msg.channel]?.name || msg.channel}</span>
+                              <span className="text-[10px] text-white/15 ml-auto">{new Date(msg.created_at).toLocaleString()}</span>
+                            </div>
+                            <div className="text-xs text-white/60 leading-relaxed whitespace-pre-wrap">
+                              <span className="mr-1">{typeIcons[msg.message_type] || "📋"}</span>
+                              {msg.content}
+                            </div>
+                            {msg.thread_id && (
+                              <button onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${msg.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-purple-400 hover:text-purple-300 mt-1.5 flex items-center gap-1">
+                                <ChevronRight className="w-3 h-3" /> View full thread
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Message input — Pedro can post to the feed */}
+              <div className="px-5 py-3 border-t border-white/10">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={feedInput}
+                    onChange={e => setFeedInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") sendFeedMessage(); }}
+                    placeholder="Post a message to your team..."
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:border-purple-500/50"
+                  />
+                  <button onClick={sendFeedMessage} disabled={!feedInput.trim()} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 rounded-lg text-xs font-medium transition-all">
+                    <Send className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
