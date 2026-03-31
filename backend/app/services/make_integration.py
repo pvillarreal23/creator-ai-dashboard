@@ -47,33 +47,59 @@ MAKE_WEBHOOKS = {
     "custom": os.getenv("MAKE_WEBHOOK_CUSTOM", ""),
 }
 
-# Which agents can trigger which scenarios
+# Every agent gets full access to create and push production — this is how we scale
+# Agents autonomously trigger Make.com scenarios relevant to their role
 AGENT_PERMISSIONS = {
-    "scriptwriter-agent": ["script_generation", "sheets_update"],
-    "hook-specialist-agent": ["script_generation"],
-    "storyteller-agent": ["script_generation"],
-    "video-editor-agent": ["video_assembly", "voiceover"],
-    "thumbnail-designer-agent": ["thumbnail"],
-    "seo-specialist-agent": ["seo_optimization", "sheets_update"],
-    "social-media-manager-agent": ["social_post"],
-    "shorts-and-clips-agent": ["video_assembly", "social_post"],
-    "newsletter-strategist-agent": ["newsletter_send", "sheets_update"],
-    "data-analyst-agent": ["analytics_pull", "sheets_update"],
-    "trend-researcher-agent": ["research", "sheets_update"],
-    "senior-researcher-agent": ["research", "sheets_update"],
-    "project-manager-agent": ["sheets_update", "notify_pedro"],
-    "secretary-agent": ["sheets_update", "notify_pedro"],
-    "web-designer-agent": ["custom"],
-    "web-developer-agent": ["custom"],
-    "community-manager-agent": ["social_post"],
+    # Content creators — full content pipeline access
+    "scriptwriter-agent": ["script_generation", "sheets_update", "custom", "research"],
+    "hook-specialist-agent": ["script_generation", "sheets_update", "custom"],
+    "storyteller-agent": ["script_generation", "sheets_update", "custom"],
 
-    # VPs can trigger anything in their domain
-    "content-vp-agent": ["script_generation", "research", "sheets_update", "notify_pedro"],
-    "operations-vp-agent": ["video_assembly", "voiceover", "thumbnail", "sheets_update", "notify_pedro"],
-    "analytics-vp-agent": ["analytics_pull", "seo_optimization", "research", "sheets_update", "notify_pedro"],
-    "monetization-vp-agent": ["newsletter_send", "social_post", "sheets_update", "notify_pedro"],
+    # Production — full production pipeline access
+    "video-editor-agent": ["video_assembly", "voiceover", "thumbnail", "sheets_update", "custom"],
+    "thumbnail-designer-agent": ["thumbnail", "sheets_update", "custom"],
+    "shorts-and-clips-agent": ["video_assembly", "social_post", "thumbnail", "sheets_update", "custom"],
 
-    # CEO can trigger everything
+    # Channel managers — full content + research + social
+    "ai-and-tech-channel-manager-agent": ["script_generation", "research", "seo_optimization", "social_post", "sheets_update", "custom"],
+    "finance-channel-manager-agent": ["script_generation", "research", "seo_optimization", "social_post", "sheets_update", "custom"],
+    "psychology-channel-manager-agent": ["script_generation", "research", "seo_optimization", "social_post", "sheets_update", "custom"],
+
+    # Distribution — full social + newsletter
+    "social-media-manager-agent": ["social_post", "sheets_update", "custom"],
+    "community-manager-agent": ["social_post", "sheets_update", "custom"],
+    "newsletter-strategist-agent": ["newsletter_send", "sheets_update", "custom"],
+
+    # Analytics & Research — full research + analytics
+    "seo-specialist-agent": ["seo_optimization", "research", "analytics_pull", "sheets_update", "custom"],
+    "data-analyst-agent": ["analytics_pull", "research", "sheets_update", "custom"],
+    "trend-researcher-agent": ["research", "analytics_pull", "sheets_update", "custom"],
+    "senior-researcher-agent": ["research", "analytics_pull", "sheets_update", "custom"],
+
+    # Monetization — full revenue stack
+    "partnership-manager-agent": ["sheets_update", "notify_pedro", "custom"],
+    "affiliate-coordinator-agent": ["sheets_update", "custom"],
+    "digital-product-manager-agent": ["sheets_update", "custom", "notify_pedro"],
+
+    # Operations — full pipeline management
+    "project-manager-agent": ["sheets_update", "notify_pedro", "custom"],
+    "workflow-orchestrator-agent": ["sheets_update", "notify_pedro", "custom"],
+    "qa-lead-agent": ["sheets_update", "notify_pedro", "custom"],
+    "secretary-agent": ["sheets_update", "notify_pedro", "custom"],
+    "compliance-officer-agent": ["sheets_update", "notify_pedro", "custom"],
+    "reflection-council-agent": ["sheets_update", "notify_pedro", "custom"],
+
+    # Web team — full custom access
+    "web-designer-agent": ["custom", "sheets_update"],
+    "web-developer-agent": ["custom", "sheets_update"],
+
+    # VPs — full domain access + cross-domain
+    "content-vp-agent": ["script_generation", "research", "seo_optimization", "social_post", "sheets_update", "notify_pedro", "custom"],
+    "operations-vp-agent": ["video_assembly", "voiceover", "thumbnail", "seo_optimization", "sheets_update", "notify_pedro", "custom"],
+    "analytics-vp-agent": ["analytics_pull", "seo_optimization", "research", "sheets_update", "notify_pedro", "custom"],
+    "monetization-vp-agent": ["newsletter_send", "social_post", "sheets_update", "notify_pedro", "custom"],
+
+    # CEO — everything
     "ceo-agent": list(MAKE_WEBHOOKS.keys()),
 }
 
