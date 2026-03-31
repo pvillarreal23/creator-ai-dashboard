@@ -1,8 +1,14 @@
 "use client";
-import { useState } from "react";
-import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { BarChart3, PlayCircle, Youtube, Users, Eye, ThumbsUp, ArrowUpRight, ArrowDownRight, Target, Layers, Settings, Bell, Search, Plus, LayoutDashboard, Mic, Image, Type, Upload, LineChart, BookOpen, X, Edit3, Trash2, Save, ChevronRight, FileText, Clock, Zap, CheckCircle2, AlertCircle, RefreshCw, ExternalLink, MessageSquare, Send, Bot, User, ChevronDown } from "lucide-react";
 
-type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics";
+type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "analytics" | "agents";
+
+interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
+interface ThreadMsg { id: string; sender_type: "user" | "agent"; sender_agent_id: string | null; sender_name?: string; content: string; created_at: string; status: string; }
+interface Thread { id: string; subject: string; participants: string[]; messages: ThreadMsg[]; status: string; updated_at: string; }
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 type Status = "RESEARCHED" | "TITLED" | "SCRIPTED" | "PRODUCTION" | "READY" | "SCHEDULED" | "LIVE";
 
 interface PipelineItem { id: string; title: string; channel: string; status: Status; date: string; views: string; }
@@ -89,6 +95,32 @@ function StatCard({ label, value, change, up, icon: Icon }: { label:string; valu
   );
 }
 
+function OrgNode({ agent, agents, depth, getInitials }: { agent: AgentInfo; agents: AgentInfo[]; depth: number; getInitials: (n: string) => string }) {
+  const [open, setOpen] = useState(depth < 2);
+  const children = agents.filter(a => a.reports_to === agent.id);
+  return (
+    <div className={depth > 0 ? "ml-6 border-l border-white/10 pl-4" : ""}>
+      <div className="flex items-center gap-3 py-1.5">
+        {children.length > 0 && (
+          <button onClick={() => setOpen(!open)} className="text-white/30 hover:text-white/60">
+            <ChevronDown className={`w-3 h-3 transition-transform ${open ? "" : "-rotate-90"}`} />
+          </button>
+        )}
+        {children.length === 0 && <span className="w-3" />}
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ backgroundColor: agent.avatar_color }}>
+          {getInitials(agent.name)}
+        </div>
+        <div>
+          <p className="text-sm font-medium">{agent.name}</p>
+          <p className="text-[10px] text-white/40">{agent.role}</p>
+        </div>
+        {children.length > 0 && <span className="text-[10px] text-white/20">({children.length})</span>}
+      </div>
+      {open && children.map(c => <OrgNode key={c.id} agent={c} agents={agents} depth={depth + 1} getInitials={getInitials} />)}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
   const [pipeline, setPipeline] = useState<PipelineItem[]>(initialPipeline);
@@ -99,6 +131,73 @@ export default function Dashboard() {
   const [newItem, setNewItem] = useState<Partial<PipelineItem>>({ title:"", channel:initialChannels[0].name, status:"RESEARCHED", date:"", views:"-" });
   const [autoStates, setAutoStates] = useState<Record<string, "idle"|"running"|"done">>(Object.fromEntries(AUTOMATIONS.map(a => [a.id, "idle"])));
   const [skillModal, setSkillModal] = useState<typeof SKILLS[0] | null>(null);
+
+  // === Agents Tab State ===
+  const [agents, setAgents] = useState<AgentInfo[]>([]);
+  const [agentPrompt, setAgentPrompt] = useState("");
+  const [activeThread, setActiveThread] = useState<Thread | null>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [agentSending, setAgentSending] = useState(false);
+  const [agentView, setAgentView] = useState<"chat" | "directory" | "org">("chat");
+  const msgEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch agents on mount
+  useEffect(() => {
+    fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
+    fetch(`${API_URL}/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
+  }, []);
+
+  // Poll active thread for new messages
+  useEffect(() => {
+    if (!activeThread) return;
+    const poll = setInterval(() => {
+      fetch(`${API_URL}/api/threads/${activeThread.id}`).then(r => r.json()).then((t: Thread) => {
+        setActiveThread(t);
+      }).catch(() => {});
+    }, 3000);
+    return () => clearInterval(poll);
+  }, [activeThread?.id]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [activeThread?.messages?.length]);
+
+  const sendToAgents = async () => {
+    if (!agentPrompt.trim()) return;
+    setAgentSending(true);
+    try {
+      // Find CEO agent
+      const ceo = agents.find(a => a.id.includes("ceo"));
+      const recipientId = ceo?.id || agents[0]?.id;
+      if (!recipientId) { setAgentSending(false); return; }
+      const res = await fetch(`${API_URL}/api/threads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: agentPrompt.slice(0, 60), recipient_agent_ids: [recipientId], content: agentPrompt }),
+      });
+      const thread = await res.json();
+      setActiveThread({ ...thread, messages: [{ id: "user-0", sender_type: "user", sender_agent_id: null, content: agentPrompt, created_at: new Date().toISOString(), status: "sent" }] });
+      setAgentPrompt("");
+      setThreads(prev => [thread, ...prev]);
+    } catch (e) { console.error(e); }
+    setAgentSending(false);
+  };
+
+  const sendReply = async () => {
+    if (!agentPrompt.trim() || !activeThread) return;
+    setAgentSending(true);
+    try {
+      await fetch(`${API_URL}/api/threads/${activeThread.id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: agentPrompt }),
+      });
+      setAgentPrompt("");
+    } catch (e) { console.error(e); }
+    setAgentSending(false);
+  };
+
+  const getAgentById = (id: string) => agents.find(a => a.id === id);
+  const getInitials = (name: string) => name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
   const handleSaveEdit = () => { if (!editItem) return; setPipeline(prev => prev.map(p => p.id === editItem.id ? editItem : p)); setEditItem(null); };
   const handleDelete = (id: string) => setPipeline(prev => prev.filter(p => p.id !== id));
@@ -131,6 +230,7 @@ export default function Dashboard() {
     { id:"skills", label:"Skills", icon:BookOpen },
     { id:"automation", label:"Automation", icon:Zap },
     { id:"analytics", label:"Analytics", icon:BarChart3 },
+    { id:"agents", label:"Agents", icon:MessageSquare },
   ];
 
   return (
@@ -387,6 +487,173 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ===== AGENTS TAB ===== */}
+        {tab === "agents" && (
+          <div className="space-y-6">
+            {/* Sub-nav */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                {(["chat","directory","org"] as const).map(v => (
+                  <button key={v} onClick={() => setAgentView(v)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${agentView === v ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}>
+                    {v === "chat" ? "Command Center" : v === "directory" ? "Agent Directory" : "Org Chart"}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-white/30">{agents.length} agents online</span>
+            </div>
+
+            {/* COMMAND CENTER — Single prompt → CEO delegates */}
+            {agentView === "chat" && (
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {/* Thread list */}
+                <div className="lg:col-span-1 bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                  <div className="p-3 border-b border-white/10">
+                    <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider">Threads</h3>
+                  </div>
+                  <div className="max-h-[500px] overflow-y-auto">
+                    <button onClick={() => setActiveThread(null)} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${!activeThread ? "bg-white/10" : ""}`}>
+                      <div className="flex items-center gap-2">
+                        <Plus className="w-3 h-3 text-blue-400" />
+                        <span className="text-sm text-blue-400 font-medium">New Task</span>
+                      </div>
+                    </button>
+                    {threads.map(t => (
+                      <button key={t.id} onClick={() => {
+                        fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {});
+                      }} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${activeThread?.id === t.id ? "bg-white/10" : ""}`}>
+                        <p className="text-sm text-white truncate">{t.subject}</p>
+                        <p className="text-[10px] text-white/30 mt-0.5">{t.participants?.length || 0} agents</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Main chat area */}
+                <div className="lg:col-span-3 bg-white/5 border border-white/10 rounded-xl flex flex-col" style={{ minHeight: 520 }}>
+                  {!activeThread ? (
+                    /* New task prompt */
+                    <div className="flex-1 flex flex-col items-center justify-center p-8">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center mb-4">
+                        <Bot className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-1">Command Your Empire</h3>
+                      <p className="text-sm text-white/50 mb-6 text-center max-w-md">
+                        Send a task and the CEO agent will delegate it to the right team members automatically.
+                      </p>
+                      <div className="w-full max-w-lg">
+                        <textarea
+                          value={agentPrompt}
+                          onChange={e => setAgentPrompt(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendToAgents(); } }}
+                          placeholder="e.g. Create a content plan for next week across all 3 channels..."
+                          rows={3}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 resize-none"
+                        />
+                        <button onClick={sendToAgents} disabled={agentSending || !agentPrompt.trim()} className="mt-3 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:opacity-50 px-4 py-2.5 rounded-lg text-sm font-medium transition-all">
+                          <Send className="w-4 h-4" />{agentSending ? "Sending..." : "Send to CEO"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Active thread */
+                    <>
+                      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-semibold">{activeThread.subject}</h3>
+                          <div className="flex gap-1 mt-1">
+                            {activeThread.participants?.map(pid => {
+                              const a = getAgentById(pid);
+                              return a ? (
+                                <span key={pid} className="inline-flex items-center gap-1 text-[10px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded">
+                                  <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: a.avatar_color }} />
+                                  {a.name.split(" ")[0]}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        </div>
+                        <button onClick={() => setActiveThread(null)} className="text-xs text-white/30 hover:text-white/60">Back</button>
+                      </div>
+                      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                        {activeThread.messages?.map(msg => {
+                          const isUser = msg.sender_type === "user";
+                          const agent = msg.sender_agent_id ? getAgentById(msg.sender_agent_id) : null;
+                          return (
+                            <div key={msg.id} className={`flex gap-3 ${isUser ? "justify-end" : ""}`}>
+                              {!isUser && (
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0" style={{ backgroundColor: agent?.avatar_color || "#6366f1" }}>
+                                  {getInitials(agent?.name || msg.sender_name || "?")}
+                                </div>
+                              )}
+                              <div className={`max-w-[75%]`}>
+                                {!isUser && (
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-[11px] font-semibold text-white/60">{agent?.name || msg.sender_name}</span>
+                                    {agent && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ backgroundColor: agent.avatar_color + "20", color: agent.avatar_color }}>{agent.role.split("—")[0].trim()}</span>}
+                                  </div>
+                                )}
+                                <div className={`rounded-xl px-3 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${isUser ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white" : "bg-white/5 border border-white/10 text-white/80"}`}>
+                                  {msg.content}
+                                </div>
+                              </div>
+                              {isUser && (
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                                  <User className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <div ref={msgEndRef} />
+                      </div>
+                      <div className="px-4 py-3 border-t border-white/10">
+                        <div className="flex gap-2">
+                          <input type="text" value={agentPrompt} onChange={e => setAgentPrompt(e.target.value)} onKeyDown={e => { if (e.key === "Enter") sendReply(); }} placeholder="Reply..." className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50" />
+                          <button onClick={sendReply} disabled={agentSending || !agentPrompt.trim()} className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 rounded-lg text-sm font-medium transition-all">
+                            <Send className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* AGENT DIRECTORY */}
+            {agentView === "directory" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {agents.map(a => (
+                  <div key={a.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:border-white/20 transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: a.avatar_color }}>
+                        {getInitials(a.name)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{a.name}</p>
+                        <p className="text-[10px] text-white/40 truncate">{a.role}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full border border-white/10 text-white/40">{a.department}</span>
+                      <span className="text-[10px] text-white/20">{a.reports_to ? `→ ${getAgentById(a.reports_to)?.name?.split(" ")[0] || ""}` : "Top"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ORG CHART */}
+            {agentView === "org" && (
+              <div className="space-y-2">
+                {agents.filter(a => !a.reports_to).map(root => (
+                  <OrgNode key={root.id} agent={root} agents={agents} depth={0} getInitials={getInitials} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
