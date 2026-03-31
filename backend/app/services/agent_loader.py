@@ -8,6 +8,22 @@ from sqlalchemy import select
 from app.models.agent import Agent
 from app.config import AGENTS_DIR
 
+AGENT_UNIVERSAL_INSTRUCTIONS = """
+
+---
+## UNIVERSAL OPERATING INSTRUCTIONS (All Agents)
+
+1. **Always respond** when addressed in a thread. You are an active team member, not a passive observer. Give substantive, actionable responses.
+2. **Use the correct date**. The system will provide today's date — always reference it accurately. Never use placeholder dates.
+3. **Stay in character**. You are a real team member with your specific role and expertise. Respond as that person would.
+4. **Be specific and actionable**. Don't give vague advice — provide concrete next steps, numbers, and timelines.
+5. **Collaborate actively**. When your work depends on or affects another agent, mention them by name so the routing system can involve them.
+6. **Escalate when needed**. If something needs Pedro's (the human operator's) approval, say "needs your approval" or "escalate to Pedro" clearly.
+7. **Report results in your output format**. Use the structured output format defined in your role description.
+8. **The company goal is 1 BILLION subscribers** across all channels. Every decision should push toward that goal.
+9. **Our channels**: The AI Edge (AI & Tech), Cash Flow Code (Finance), Mind Shift (Psychology).
+"""
+
 DEPARTMENT_COLORS = {
     "executive": "#8b5cf6",
     "content": "#3b82f6",
@@ -97,7 +113,7 @@ def parse_agents() -> list[dict]:
             "direct_reports_raw": meta.get("direct_reports", []),
             "collaborates_with_raw": meta.get("collaborates_with", []),
             "file_path": str(md_file.relative_to(AGENTS_DIR.parent)),
-            "system_prompt": post.content,
+            "system_prompt": post.content + AGENT_UNIVERSAL_INSTRUCTIONS,
         }
 
     # Resolve references

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import anthropic
+from datetime import datetime, timezone
 from app.config import ANTHROPIC_API_KEY, CLAUDE_MODEL
 
 
@@ -43,6 +44,21 @@ def format_thread_for_agent(messages: list[dict], agent_id: str) -> list[dict]:
     return merged if merged else [{"role": "user", "content": "[System] New thread started."}]
 
 
+def get_date_context() -> str:
+    """Return current date context to inject into every agent's system prompt."""
+    now = datetime.now(timezone.utc)
+    return (
+        f"\n\n---\n"
+        f"CURRENT DATE: {now.strftime('%A, %B %d, %Y')}\n"
+        f"CURRENT TIME (UTC): {now.strftime('%I:%M %p')}\n"
+        f"CURRENT YEAR: {now.year}\n"
+        f"CURRENT QUARTER: Q{(now.month - 1) // 3 + 1} {now.year}\n"
+        f"---\n"
+        f"IMPORTANT: Always use the correct current date above in all responses. "
+        f"Never guess or use placeholder dates. Today is {now.strftime('%B %d, %Y')}.\n"
+    )
+
+
 def generate_agent_response(
     system_prompt: str,
     thread_messages: list[dict],
@@ -52,10 +68,13 @@ def generate_agent_response(
     client = get_client()
     messages = format_thread_for_agent(thread_messages, agent_id)
 
+    # Inject current date into every agent's system prompt
+    full_system_prompt = system_prompt + get_date_context()
+
     response = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=2048,
-        system=system_prompt,
+        system=full_system_prompt,
         messages=messages,
     )
     return response.content[0].text
