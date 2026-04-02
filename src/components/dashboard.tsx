@@ -317,64 +317,64 @@ export default function Dashboard() {
 
   // Fetch agents and activity on mount
   useEffect(() => {
-    fetch(`${API_URL}/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
-    fetch(`${API_URL}/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
-    fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
-    fetch(`${API_URL}/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
-    fetch(`${API_URL}/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
-    fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
-    fetch(`${API_URL}/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
-    fetch(`${API_URL}/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
-    fetch(`${API_URL}/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
-    fetch(`${API_URL}/api/tools/scenarios`).then(r => r.json()).then(setScenariosList).catch(() => {});
+    fetch(`/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
+    fetch(`/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
+    fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+    fetch(`/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
+    fetch(`/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
+    fetch(`/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
+    fetch(`/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
+    fetch(`/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
+    fetch(`/api/tools/scenarios`).then(r => r.json()).then(setScenariosList).catch(() => {});
   }, []);
 
   // Poll activity + feed every 10 seconds
   useEffect(() => {
     const poll = setInterval(() => {
-      fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
-      fetch(`${API_URL}/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
-      fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
+      fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+      fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+      fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
     }, 10000);
     return () => clearInterval(poll);
   }, [feedChannel]);
 
   const resolveEscalation = async (id: string) => {
-    await fetch(`${API_URL}/api/scheduler/escalations/${id}/resolve`, { method: "POST" }).catch(() => {});
-    fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
+    await fetch(`/api/scheduler/escalations/${id}/resolve`, { method: "POST" }).catch(() => {});
+    fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
   };
 
   const triggerTask = async (id: string) => {
-    await fetch(`${API_URL}/api/scheduler/tasks/${id}/run`, { method: "POST" }).catch(() => {});
-    setTimeout(() => fetch(`${API_URL}/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {}), 2000);
+    await fetch(`/api/scheduler/tasks/${id}/run`, { method: "POST" }).catch(() => {});
+    setTimeout(() => fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {}), 2000);
   };
 
   const switchFeedChannel = (ch: string) => {
     setFeedChannel(ch);
-    fetch(`${API_URL}/api/feed/messages?channel=${ch}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/feed/messages?channel=${ch}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
   };
 
   const sendFeedMessage = async () => {
     if (!feedInput.trim()) return;
-    await fetch(`${API_URL}/api/feed/send`, {
+    await fetch(`/api/feed/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: feedInput, channel: feedChannel === "all" ? "general" : feedChannel }),
     }).catch(() => {});
     setFeedInput("");
-    fetch(`${API_URL}/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
   };
 
   const markAllRead = async () => {
-    await fetch(`${API_URL}/api/feed/mark_all_read?channel=${feedChannel}`, { method: "POST" }).catch(() => {});
-    fetch(`${API_URL}/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
+    await fetch(`/api/feed/mark_all_read?channel=${feedChannel}`, { method: "POST" }).catch(() => {});
+    fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
   };
 
   // Poll active thread for new messages
   useEffect(() => {
     if (!activeThread) return;
     const poll = setInterval(() => {
-      fetch(`${API_URL}/api/threads/${activeThread.id}`).then(r => r.json()).then((t: Thread) => {
+      fetch(`/api/threads/${activeThread.id}`).then(r => r.json()).then((t: Thread) => {
         setActiveThread(t);
       }).catch(() => {});
     }, 3000);
@@ -392,7 +392,7 @@ export default function Dashboard() {
       const ceo = agents.find(a => a.id.includes("ceo"));
       const recipientId = ceo?.id || agents[0]?.id;
       if (!recipientId) { setAgentSending(false); return; }
-      const res = await fetch(`${API_URL}/api/threads`, {
+      const res = await fetch(`/api/threads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subject: agentPrompt.slice(0, 60), recipient_agent_ids: [recipientId], content: agentPrompt }),
@@ -409,7 +409,7 @@ export default function Dashboard() {
     if (!agentPrompt.trim() || !activeThread) return;
     setAgentSending(true);
     try {
-      await fetch(`${API_URL}/api/threads/${activeThread.id}/messages`, {
+      await fetch(`/api/threads/${activeThread.id}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: agentPrompt }),
@@ -985,7 +985,7 @@ export default function Dashboard() {
                       const isActive = activeThread?.id === t.id;
                       return (
                         <button key={t.id} onClick={() => {
-                          fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {});
+                          fetch(`/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {});
                         }} className={`w-full text-left px-3 py-3 border-b border-white/5 hover:bg-white/5 transition-all ${isActive ? "bg-white/10 border-l-2 border-l-purple-500" : ""}`}>
                           <div className="flex items-start gap-2.5">
                             <div className="flex -space-x-1.5 shrink-0 mt-0.5">
@@ -1755,7 +1755,7 @@ export default function Dashboard() {
                               {msg.content}
                             </div>
                             {msg.thread_id && (
-                              <button onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${msg.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-purple-400 hover:text-purple-300 mt-1.5 flex items-center gap-1">
+                              <button onClick={() => { setTab("agents"); fetch(`/api/threads/${msg.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-purple-400 hover:text-purple-300 mt-1.5 flex items-center gap-1">
                                 <ChevronRight className="w-3 h-3" /> View full thread
                               </button>
                             )}
@@ -2009,7 +2009,7 @@ export default function Dashboard() {
                               <p className="text-[10px] text-white/50 mt-1 leading-relaxed">{e.reason}</p>
                               <div className="flex items-center gap-2 mt-2">
                                 <button onClick={() => resolveEscalation(e.id)} className="text-[10px] text-green-400 hover:text-green-300 px-2 py-1 border border-green-500/20 rounded hover:bg-green-500/10 transition-all">Approve</button>
-                                <button onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${e.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500/20 rounded hover:bg-blue-500/10 transition-all">View Thread</button>
+                                <button onClick={() => { setTab("agents"); fetch(`/api/threads/${e.thread_id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="text-[10px] text-blue-400 hover:text-blue-300 px-2 py-1 border border-blue-500/20 rounded hover:bg-blue-500/10 transition-all">View Thread</button>
                                 <span className={`text-[8px] px-1.5 py-0.5 rounded-full ml-auto ${e.severity === "high" ? "bg-red-500/20 text-red-400" : e.severity === "medium" ? "bg-amber-500/20 text-amber-400" : "bg-white/5 text-white/25"}`}>{e.severity}</span>
                               </div>
                             </div>
@@ -2054,7 +2054,7 @@ export default function Dashboard() {
                     const tier = firstAgent ? getAgentTier(firstAgent) : null;
                     const ts = tier ? TIER_STYLES[tier] : null;
                     return (
-                      <button key={t.id} onClick={() => { setTab("agents"); fetch(`${API_URL}/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="w-full text-left flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-all">
+                      <button key={t.id} onClick={() => { setTab("agents"); fetch(`/api/threads/${t.id}`).then(r => r.json()).then(setActiveThread).catch(() => {}); }} className="w-full text-left flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] transition-all">
                         <div className="flex -space-x-2 shrink-0">
                           {t.participants?.slice(0, 4).map((pid: string) => (
                             <img key={pid} src={getAgentAvatar(pid)} className={`w-8 h-8 rounded-full object-cover ring-2 ring-[#0a0a0a] ${TIER_STYLES[getAgentTier(pid)]?.ring || ""}`} alt="" />
