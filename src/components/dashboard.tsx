@@ -18,39 +18,47 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Human personas for agents — local business headshot photos
 const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "female" }> = {
-  "ceo-agent":                        { humanName: "Marcus Chen",      gender: "male"   },
-  "content-vp-agent":                 { humanName: "Sofia Rivera",     gender: "female" },
-  "operations-vp-agent":              { humanName: "James Okafor",     gender: "male"   },
-  "analytics-vp-agent":               { humanName: "Priya Sharma",     gender: "female" },
-  "monetization-vp-agent":            { humanName: "Daniel Kim",       gender: "male"   },
-  "ai-and-tech-channel-manager-agent":{ humanName: "Aisha Patel",      gender: "female" },
-  "finance-channel-manager-agent":    { humanName: "Ryan Mitchell",    gender: "male"   },
-  "psychology-channel-manager-agent": { humanName: "Elena Vasquez",    gender: "female" },
-  "scriptwriter-agent":               { humanName: "Noah Thompson",    gender: "male"   },
-  "hook-specialist-agent":            { humanName: "Mia Jackson",      gender: "female" },
-  "storyteller-agent":                { humanName: "Liam O'Connor",    gender: "male"   },
-  "shorts-and-clips-agent":           { humanName: "Zara Ahmed",       gender: "female" },
-  "thumbnail-designer-agent":         { humanName: "Kai Nakamura",     gender: "male"   },
-  "video-editor-agent":               { humanName: "Isabella Torres",  gender: "female" },
-  "seo-specialist-agent":             { humanName: "Ethan Park",       gender: "male"   },
-  "project-manager-agent":            { humanName: "Olivia Bennett",   gender: "female" },
-  "workflow-orchestrator-agent":       { humanName: "Amir Hassan",      gender: "male"   },
-  "qa-lead-agent":                    { humanName: "Hannah Lee",       gender: "female" },
-  "reflection-council-agent":         { humanName: "Victor Andrei",    gender: "male"   },
-  "senior-researcher-agent":          { humanName: "Grace Nguyen",     gender: "female" },
-  "trend-researcher-agent":           { humanName: "Leo Martinez",     gender: "male"   },
-  "data-analyst-agent":               { humanName: "Chloe Williams",   gender: "female" },
-  "partnership-manager-agent":        { humanName: "Omar Farouk",      gender: "male"   },
-  "affiliate-coordinator-agent":      { humanName: "Natalie Brooks",   gender: "female" },
-  "digital-product-manager-agent":    { humanName: "Raj Kapoor",       gender: "male"   },
-  "newsletter-strategist-agent":      { humanName: "Sarah Lindgren",   gender: "female" },
-  "community-manager-agent":          { humanName: "Tyler Robinson",   gender: "male"   },
-  "social-media-manager-agent":       { humanName: "Jade Moreau",      gender: "female" },
-  "secretary-agent":                  { humanName: "Emma Fischer",     gender: "female" },
-  "compliance-officer-agent":         { humanName: "David Reeves",     gender: "male"   },
-  "web-designer-agent":               { humanName: "Luna Chang",       gender: "female" },
-  "web-developer-agent":              { humanName: "Alex Petrov",      gender: "male"   },
-  "cfo-agent":                        { humanName: "Victoria Steele",  gender: "female" },
+  // Tier 1 — Executive
+  "ceo-agent":                              { humanName: "Marcus Chen",      gender: "male"   },
+  // Tier 2 — VPs
+  "content-vp":                             { humanName: "Sofia Rivera",     gender: "female" },
+  "operations-vp":                          { humanName: "James Okafor",     gender: "male"   },
+  "analytics-vp":                           { humanName: "Priya Sharma",     gender: "female" },
+  "monetization-vp":                        { humanName: "Daniel Kim",       gender: "male"   },
+  // Tier 3 — Channel Managers
+  "ai-and-tech-channel-manager":            { humanName: "Aisha Patel",      gender: "female" },
+  "finance-and-business-channel-manager":   { humanName: "Ryan Mitchell",    gender: "male"   },
+  "psychology-and-behavior-channel-manager": { humanName: "Elena Vasquez",   gender: "female" },
+  // Tier 4 — Content Production
+  "scriptwriter":                           { humanName: "Noah Thompson",    gender: "male"   },
+  "hook-specialist":                        { humanName: "Mia Jackson",      gender: "female" },
+  "storyteller":                            { humanName: "Liam O'Connor",    gender: "male"   },
+  "shorts-and-clips-agent":                 { humanName: "Zara Ahmed",       gender: "female" },
+  "thumbnail-designer":                     { humanName: "Kai Nakamura",     gender: "male"   },
+  "video-editor":                           { humanName: "Isabella Torres",  gender: "female" },
+  "seo-specialist":                         { humanName: "Ethan Park",       gender: "male"   },
+  "voice-director":                         { humanName: "Carmen Reyes",     gender: "female" },
+  // Tier 5 — Operations
+  "project-manager":                        { humanName: "Olivia Bennett",   gender: "female" },
+  "workflow-orchestrator":                   { humanName: "Amir Hassan",      gender: "male"   },
+  "quality-assurance-lead":                 { humanName: "Hannah Lee",       gender: "female" },
+  "reflection-council":                     { humanName: "Victor Andrei",    gender: "male"   },
+  "automation-engineer":                    { humanName: "Alex Petrov",      gender: "male"   },
+  // Tier 6 — Research
+  "senior-researcher":                      { humanName: "Grace Nguyen",     gender: "female" },
+  "trend-researcher":                       { humanName: "Leo Martinez",     gender: "male"   },
+  "data-analyst":                           { humanName: "Chloe Williams",   gender: "female" },
+  // Tier 7 — Monetization
+  "partnership-manager":                    { humanName: "Omar Farouk",      gender: "male"   },
+  "affiliate-coordinator":                  { humanName: "Natalie Brooks",   gender: "female" },
+  "digital-product-manager":               { humanName: "Raj Kapoor",       gender: "male"   },
+  "newsletter-strategist":                  { humanName: "Sarah Lindgren",   gender: "female" },
+  // Tier 8 — Community & Social
+  "community-manager":                     { humanName: "Tyler Robinson",   gender: "male"   },
+  "social-media-manager":                  { humanName: "Jade Moreau",      gender: "female" },
+  "secretary-agent":                        { humanName: "Emma Fischer",     gender: "female" },
+  // Tier 9 — Compliance
+  "compliance-officer":                    { humanName: "David Reeves",     gender: "male"   },
 };
 
 function getAgentAvatar(agentId: string): string {
@@ -61,22 +69,41 @@ function getHumanName(agentId: string): string {
   return AGENT_PERSONAS[agentId]?.humanName || "";
 }
 
-// Tier system based on org level
-type Tier = "C-Suite" | "VP" | "Manager" | "Specialist" | "Support";
+// 9-Tier AgentIQ system
+type Tier = "T1" | "T2" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8" | "T9";
+const TIER_LABELS: Record<Tier, string> = {
+  "T1": "Executive", "T2": "VP", "T3": "Channel Mgr", "T4": "Production",
+  "T5": "Operations", "T6": "Research", "T7": "Monetization", "T8": "Community", "T9": "Compliance",
+};
 const TIER_STYLES: Record<Tier, { bg: string; border: string; text: string; badge: string; ring: string }> = {
-  "C-Suite":    { bg: "bg-yellow-500/5",  border: "border-yellow-500/30", text: "text-yellow-400",  badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30", ring: "ring-yellow-500/60" },
-  "VP":         { bg: "bg-purple-500/5",  border: "border-purple-500/30", text: "text-purple-400",  badge: "bg-purple-500/20 text-purple-300 border-purple-500/30", ring: "ring-purple-500/60" },
-  "Manager":    { bg: "bg-blue-500/5",    border: "border-blue-500/30",   text: "text-blue-400",    badge: "bg-blue-500/20 text-blue-300 border-blue-500/30",     ring: "ring-blue-500/60" },
-  "Specialist": { bg: "bg-cyan-500/5",    border: "border-cyan-500/30",   text: "text-cyan-400",    badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",     ring: "ring-cyan-500/60" },
-  "Support":    { bg: "bg-emerald-500/5", border: "border-emerald-500/30",text: "text-emerald-400", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", ring: "ring-emerald-500/60" },
+  "T1": { bg: "bg-yellow-500/5",  border: "border-yellow-500/30", text: "text-yellow-400",  badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30", ring: "ring-yellow-500/60" },
+  "T2": { bg: "bg-purple-500/5",  border: "border-purple-500/30", text: "text-purple-400",  badge: "bg-purple-500/20 text-purple-300 border-purple-500/30", ring: "ring-purple-500/60" },
+  "T3": { bg: "bg-blue-500/5",    border: "border-blue-500/30",   text: "text-blue-400",    badge: "bg-blue-500/20 text-blue-300 border-blue-500/30",     ring: "ring-blue-500/60" },
+  "T4": { bg: "bg-cyan-500/5",    border: "border-cyan-500/30",   text: "text-cyan-400",    badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",     ring: "ring-cyan-500/60" },
+  "T5": { bg: "bg-amber-500/5",   border: "border-amber-500/30",  text: "text-amber-400",   badge: "bg-amber-500/20 text-amber-300 border-amber-500/30",   ring: "ring-amber-500/60" },
+  "T6": { bg: "bg-emerald-500/5", border: "border-emerald-500/30",text: "text-emerald-400", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", ring: "ring-emerald-500/60" },
+  "T7": { bg: "bg-red-500/5",     border: "border-red-500/30",    text: "text-red-400",     badge: "bg-red-500/20 text-red-300 border-red-500/30",         ring: "ring-red-500/60" },
+  "T8": { bg: "bg-pink-500/5",    border: "border-pink-500/30",   text: "text-pink-400",    badge: "bg-pink-500/20 text-pink-300 border-pink-500/30",       ring: "ring-pink-500/60" },
+  "T9": { bg: "bg-slate-500/5",   border: "border-slate-500/30",  text: "text-slate-400",   badge: "bg-slate-500/20 text-slate-300 border-slate-500/30",     ring: "ring-slate-500/60" },
+};
+
+// Map agent IDs to tiers based on the AgentIQ 9-tier structure
+const AGENT_TIER_MAP: Record<string, number> = {
+  "ceo-agent": 1,
+  "content-vp": 2, "operations-vp": 2, "analytics-vp": 2, "monetization-vp": 2,
+  "ai-and-tech-channel-manager": 3, "finance-and-business-channel-manager": 3, "psychology-and-behavior-channel-manager": 3,
+  "scriptwriter": 4, "hook-specialist": 4, "storyteller": 4, "shorts-and-clips-agent": 4,
+  "thumbnail-designer": 4, "video-editor": 4, "seo-specialist": 4, "voice-director": 4,
+  "project-manager": 5, "workflow-orchestrator": 5, "quality-assurance-lead": 5, "reflection-council": 5, "automation-engineer": 5,
+  "senior-researcher": 6, "trend-researcher": 6, "data-analyst": 6,
+  "partnership-manager": 7, "affiliate-coordinator": 7, "digital-product-manager": 7, "newsletter-strategist": 7,
+  "community-manager": 8, "social-media-manager": 8, "secretary-agent": 8,
+  "compliance-officer": 9,
 };
 
 function getAgentTier(agentId: string): Tier {
-  if (agentId === "ceo-agent" || agentId === "cfo-agent") return "C-Suite";
-  if (agentId.includes("-vp-")) return "VP";
-  if (agentId.includes("channel-manager")) return "Manager";
-  if (["project-manager-agent","workflow-orchestrator-agent","secretary-agent","compliance-officer-agent"].includes(agentId)) return "Support";
-  return "Specialist";
+  const t = AGENT_TIER_MAP[agentId] || 5;
+  return `T${t}` as Tier;
 }
 
 const DEPT_COLORS: Record<string, { dot: string; label: string }> = {
@@ -107,20 +134,20 @@ const SC: Record<Status, string> = {
 const STATUSES: Status[] = ["RESEARCHED","TITLED","SCRIPTED","PRODUCTION","READY","SCHEDULED","LIVE"];
 
 const initialChannels: Channel[] = [
-  { id:"1", name:"The AI Edge", subs:"0", views:"0", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"+0%", vids:"0", ctr:"0%", revenue:"$0", nextVideo:"Apr 2" },
+  { id:"1", name:"AgentIQ", subs:"0", views:"0", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"+0%", vids:"0", ctr:"0%", revenue:"$0", nextVideo:"Apr 2" },
   { id:"2", name:"Cash Flow Code", subs:"—", views:"—", freq:"2x/week", color:"from-green-600 to-emerald-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 7" },
   { id:"3", name:"Mind Shift", subs:"—", views:"—", freq:"1x/week", color:"from-purple-600 to-pink-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 13" },
 ];
 
 const initialPipeline: PipelineItem[] = [
-  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 2", views:"-" },
-  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 5", views:"-" },
+  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 2", views:"-" },
+  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 5", views:"-" },
   { id:"4", title:"How I Built a $10K/mo AI Business", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 12", views:"-" },
   { id:"5", title:"The Psychology of Going Viral", channel:"Mind Shift", status:"TITLED", date:"Apr 14", views:"-" },
-  { id:"6", title:"AI Agents Will Replace SaaS", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 16", views:"-" },
+  { id:"6", title:"AI Agents Will Replace SaaS", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 16", views:"-" },
   { id:"7", title:"Why Most Side Hustles Fail in 2026", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 19", views:"-" },
   { id:"8", title:"How YouTube Algorithm Actually Works", channel:"Mind Shift", status:"TITLED", date:"Apr 21", views:"-" },
-  { id:"3", title:"How Make.com Automates Everything", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 9", views:"-" },
+  { id:"3", title:"How Make.com Automates Everything", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 9", views:"-" },
 ];
 
 const SKILLS = [
@@ -930,7 +957,11 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-white/30 shrink-0 hidden sm:block">{agents.length} agents</span>
+              <div className="flex items-center gap-2 shrink-0">
+                <a href="/agents" className="flex items-center gap-1.5 text-[10px] md:text-xs text-white/30 hover:text-white/60 transition-all"><ExternalLink className="w-3 h-3" /> Full Directory</a>
+                <a href="/org" className="flex items-center gap-1.5 text-[10px] md:text-xs text-white/30 hover:text-white/60 transition-all"><ExternalLink className="w-3 h-3" /> Org Chart</a>
+                <span className="text-xs text-white/30 hidden sm:block ml-1">{agents.length} agents</span>
+              </div>
             </div>
 
             {/* COMMAND CENTER — Single prompt → CEO delegates */}
@@ -1021,7 +1052,7 @@ export default function Dashboard() {
                             ]},
                             { cat: "Growth", color: "green", icon: "📈", prompts: [
                               "Research trending topics in AI, finance, and psychology for this month",
-                              "Develop a strategy to hit 10K subscribers on The AI Edge in 90 days",
+                              "Develop a strategy to hit 10K subscribers on AgentIQ in 90 days",
                               "Audit our SEO across all channels and recommend improvements",
                             ]},
                             { cat: "Revenue", color: "amber", icon: "💰", prompts: [
@@ -1138,14 +1169,15 @@ export default function Dashboard() {
             {/* AGENT DIRECTORY */}
             {agentView === "directory" && (
               <div className="space-y-8">
-                {(["C-Suite","VP","Manager","Specialist","Support"] as Tier[]).map(tier => {
+                {(["T1","T2","T3","T4","T5","T6","T7","T8","T9"] as Tier[]).map(tier => {
                   const tierAgents = agents.filter(a => getAgentTier(a.id) === tier);
                   if (tierAgents.length === 0) return null;
                   const ts = TIER_STYLES[tier];
+                  const tierLabel = TIER_LABELS[tier];
                   return (
                     <div key={tier}>
                       <div className="flex items-center gap-3 mb-3">
-                        <span className={`text-xs font-bold uppercase tracking-wider ${ts.text}`}>{tier}</span>
+                        <span className={`text-xs font-bold uppercase tracking-wider ${ts.text}`}>{tier} — {tierLabel}</span>
                         <div className="flex-1 h-px bg-white/5" />
                         <span className="text-[10px] text-white/20">{tierAgents.length} agents</span>
                       </div>
@@ -1190,7 +1222,7 @@ export default function Dashboard() {
                   const deptAgents = agents.filter(a => a.department === deptKey);
                   if (deptAgents.length === 0) return null;
                   // Sort by tier within department
-                  const tierOrder: Record<Tier, number> = { "C-Suite": 0, "VP": 1, "Manager": 2, "Specialist": 3, "Support": 4 };
+                  const tierOrder: Record<Tier, number> = { "T1": 1, "T2": 2, "T3": 3, "T4": 4, "T5": 5, "T6": 6, "T7": 7, "T8": 8, "T9": 9 };
                   const sorted = [...deptAgents].sort((a, b) => tierOrder[getAgentTier(a.id)] - tierOrder[getAgentTier(b.id)]);
                   // Find the department head (highest tier)
                   const head = sorted[0];
@@ -1914,7 +1946,10 @@ export default function Dashboard() {
                 <h2 className="text-xl font-bold flex items-center gap-2"><Inbox className="w-5 h-5 text-blue-400" /> Inbox</h2>
                 <p className="text-sm text-white/40 mt-1">Escalations, approvals, and important updates from your team</p>
               </div>
-              <button onClick={() => setTab("agents")} className="flex items-center gap-2 text-xs bg-purple-600 hover:bg-purple-500 px-3 py-2 rounded-lg font-medium transition-all"><Plus className="w-3 h-3" /> New Thread</button>
+              <div className="flex items-center gap-2">
+                <a href="/inbox" className="flex items-center gap-2 text-xs bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-lg font-medium transition-all"><ExternalLink className="w-3 h-3" /> Full Inbox</a>
+                <a href="/compose" className="flex items-center gap-2 text-xs bg-purple-600 hover:bg-purple-500 px-3 py-2 rounded-lg font-medium transition-all"><Plus className="w-3 h-3" /> New Thread</a>
+              </div>
             </div>
 
             {/* Summary stats */}
