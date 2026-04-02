@@ -79,7 +79,7 @@ function getHumanName(agentId: string): string {
   return AGENT_PERSONAS[agentId]?.humanName || "";
 }
 
-// 9-Tier AgentIQ system
+// 9-Tier The AI Edge system
 type Tier = "T1" | "T2" | "T3" | "T4" | "T5" | "T6" | "T7" | "T8" | "T9";
 const TIER_LABELS: Record<Tier, string> = {
   "T1": "Executive", "T2": "VP", "T3": "Channel Mgr", "T4": "Production",
@@ -97,7 +97,7 @@ const TIER_STYLES: Record<Tier, { bg: string; border: string; text: string; badg
   "T9": { bg: "bg-slate-500/5",   border: "border-slate-500/30",  text: "text-slate-400",   badge: "bg-slate-500/20 text-slate-300 border-slate-500/30",     ring: "ring-slate-500/60" },
 };
 
-// Map agent IDs to tiers based on the AgentIQ 9-tier structure
+// Map agent IDs to tiers based on the The AI Edge 9-tier structure
 const AGENT_TIER_MAP: Record<string, number> = {
   "ceo-agent": 1,
   "content-vp": 2, "operations-vp": 2, "analytics-vp": 2, "monetization-vp": 2,
@@ -449,10 +449,15 @@ export default function Dashboard() {
     setTimeout(() => setAutoStates(prev => ({ ...prev, [id]: "done" })), 2500);
   };
 
+  // Compute stats from channels data
+  const totalSubs = channels.reduce((sum, ch) => sum + (ch.subsCount || 0), 0);
+  const totalRevenue = channels.reduce((sum, ch) => sum + (ch.revenueAmount || 0), 0);
+  const totalVids = channels.reduce((sum, ch) => sum + (ch.vidsCount || 0), 0);
+
   const stats = [
-    { label:"Total Monthly Revenue", value:"$0", change:"+0%", up:true, icon:Eye },
-    { label:"Total Subscribers", value:"0", change:"+0%", up:true, icon:Users },
-    { label:"Videos Published", value:"0", change:"Month 0", up:true, icon:Clock },
+    { label:"Total Monthly Revenue", value:`$${totalRevenue}`, change:"+0%", up:true, icon:Eye },
+    { label:"Total Subscribers", value:totalSubs.toLocaleString(), change:"+0%", up:true, icon:Users },
+    { label:"Videos Published", value:totalVids.toString(), change:"Month 0", up:true, icon:Clock },
     { label:"Tool Spend", value:"$105/mo", change:"On budget", up:true, icon:Target },
   ];
 

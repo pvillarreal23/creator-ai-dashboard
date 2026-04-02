@@ -151,7 +151,7 @@ Each agent is mapped to a real persona with a human name and gender. The system 
 
 ### System Prompt (operating-system.md)
 
-All agents follow the **AgentIQ Agency Operating System v1.0**, which defines:
+All agents follow the **The AI Edge Agency Operating System v1.0**, which defines:
 - Reasoning protocol: INTERPRET → CONSTRAIN → MAP → EXECUTE → REFLECT
 - Quality gates: ACCURACY, RELEVANCE, VOICE
 - Human voice mandate: zero AI filler, conversational tone, specific opinions
@@ -290,7 +290,7 @@ Use the Threads tab to send test messages. Responses from Claude are cached loca
 
 ## Quality Standards
 
-All agents must meet the AgentIQ Quality Gate before delivery:
+All agents must meet the The AI Edge Quality Gate before delivery:
 - **ACCURACY** — Factually correct and current
 - **RELEVANCE** — Serves the AI/automation niche
 - **VOICE** — Sharp, intelligent, energetic, zero fluff
@@ -299,7 +299,7 @@ Every output is logged with a confidence score (1–10). Scores below 7 are revi
 
 ## License
 
-Proprietary — AgentIQ YouTube Empire
+Proprietary — The AI Edge YouTube Empire
 
 ## Support & Feedback
 
