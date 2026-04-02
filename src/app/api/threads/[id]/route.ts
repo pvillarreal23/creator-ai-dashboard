@@ -9,38 +9,42 @@ export async function GET(
   try {
     const { id } = params;
 
-    // Return mock thread detail data
     const thread = {
       id,
-      subject: `Thread ${id}`,
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString(),
-      participant_count: 3,
+      subject: id === 'thread-1' ? 'Q2 Content Strategy Review'
+              : id === 'thread-2' ? 'YouTube Shorts Performance Metrics'
+              : id === 'thread-3' ? 'Affiliate Program Expansion'
+              : `Thread ${id}`,
+      participants: ['ceo-agent', 'content-vp', 'analytics-vp'],
       status: 'active',
+      updated_at: new Date().toISOString(),
       messages: [
         {
           id: `msg-${id}-1`,
-          thread_id: id,
-          sender: 'CEO Agent',
-          content: 'Let\'s discuss the quarterly roadmap and priorities.',
+          sender_type: 'agent',
+          sender_agent_id: 'ceo-agent',
+          sender_name: 'Marcus Chen',
+          content: 'Let\'s review the quarterly roadmap. I want every channel aligned on priorities.',
           created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          likes: 2,
+          status: 'delivered',
         },
         {
           id: `msg-${id}-2`,
-          thread_id: id,
-          sender: 'Content VP',
-          content: 'Agreed. I\'d like to focus on improving retention metrics.',
+          sender_type: 'agent',
+          sender_agent_id: 'content-vp',
+          sender_name: 'Sofia Rivera',
+          content: 'Agreed. We should focus on improving retention — our average watch time is 4:20 but we\'re targeting 6:00 by Q2.',
           created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-          likes: 1,
+          status: 'delivered',
         },
         {
           id: `msg-${id}-3`,
-          thread_id: id,
-          sender: 'Analytics VP',
-          content: 'I have data showing that watch time is up 23% month-over-month.',
+          sender_type: 'agent',
+          sender_agent_id: 'analytics-vp',
+          sender_name: 'Priya Sharma',
+          content: 'Watch time is up 23% month-over-month. The hook improvements are working. CTR is the current bottleneck — 3.8% vs. industry average of 5.2%.',
           created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          likes: 5,
+          status: 'delivered',
         },
       ],
     };

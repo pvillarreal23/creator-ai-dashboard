@@ -10,6 +10,7 @@ interface Agent {
   role: string;
   tier: number;
   department: string;
+  avatar: string;
   reports_to?: string;
   direct_reports?: string[];
   collaborates_with?: string[];
@@ -18,6 +19,20 @@ interface Agent {
   special_skill?: string;
   weakness_to_watch?: string;
   learning_focus?: string;
+}
+
+// Avatar files use {id}-agent.jpg except when id already ends with "-agent"
+// Special cases for non-standard filenames
+const AVATAR_OVERRIDES: Record<string, string> = {
+  'quality-assurance-lead': '/avatars/qa-lead-agent.jpg',
+  'automation-engineer': '/avatars/workflow-orchestrator-agent.jpg', // fallback
+  'voice-director': '/avatars/scriptwriter-agent.jpg', // fallback
+};
+
+function getAvatarPath(id: string): string {
+  if (AVATAR_OVERRIDES[id]) return AVATAR_OVERRIDES[id];
+  if (id.endsWith('-agent')) return `/avatars/${id}.jpg`;
+  return `/avatars/${id}-agent.jpg`;
 }
 
 async function parseAgentFiles(): Promise<Agent[]> {
@@ -50,12 +65,14 @@ async function parseAgentFiles(): Promise<Agent[]> {
         if (!match) continue;
 
         const frontmatter = match[1];
+        const agentId = file.replace('.md', '');
         const agent: Agent = {
-          id: file.replace('.md', ''),
+          id: agentId,
           name: '',
           role: '',
           tier: 0,
           department: '',
+          avatar: getAvatarPath(agentId),
         };
 
         // Parse YAML properties
@@ -117,9 +134,9 @@ async function parseAgentFiles(): Promise<Agent[]> {
 export async function GET() {
   try {
     const agents = await parseAgentFiles();
-    return NextResponse.json({ agents, total: agents.length });
+    return NextResponse.json(agents);
   } catch (error) {
     console.error('Error in agents API:', error);
-    return NextResponse.json({ agents: [], total: 0 });
+    return NextResponse.json([]);
   }
 }
