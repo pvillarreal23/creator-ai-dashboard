@@ -317,23 +317,23 @@ export default function Dashboard() {
 
   // Fetch agents and activity on mount
   useEffect(() => {
-    fetch(`/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
-    fetch(`/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
+    fetch(`/api/agents`).then(r => r.json()).then(d => setAgents(d.agents || [])).catch(() => {});
+    fetch(`/api/threads`).then(r => r.json()).then(d => setThreads(d.threads || [])).catch(() => {});
     fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
-    fetch(`/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
-    fetch(`/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/scheduler/tasks`).then(r => r.json()).then(d => setScheduledTasks(d.tasks || [])).catch(() => {});
+    fetch(`/api/feed/messages?limit=50`).then(r => r.json()).then(d => setFeedMessages(d.messages || [])).catch(() => {});
     fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
-    fetch(`/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
-    fetch(`/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
-    fetch(`/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
-    fetch(`/api/tools/scenarios`).then(r => r.json()).then(setScenariosList).catch(() => {});
+    fetch(`/api/social/accounts`).then(r => r.json()).then(d => setSocialAccounts(d.accounts || [])).catch(() => {});
+    fetch(`/api/vault/credentials`).then(r => r.json()).then(d => setVaultEntries(d.credentials || [])).catch(() => {});
+    fetch(`/api/tools`).then(r => r.json()).then(d => setToolsList(d.tools || [])).catch(() => {});
+    fetch(`/api/tools/scenarios`).then(r => r.json()).then(d => setScenariosList(d.scenarios || {})).catch(() => {});
   }, []);
 
   // Poll activity + feed every 10 seconds
   useEffect(() => {
     const poll = setInterval(() => {
       fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
-      fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+      fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(d => setFeedMessages(d.messages || [])).catch(() => {});
       fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
     }, 10000);
     return () => clearInterval(poll);
@@ -351,7 +351,7 @@ export default function Dashboard() {
 
   const switchFeedChannel = (ch: string) => {
     setFeedChannel(ch);
-    fetch(`/api/feed/messages?channel=${ch}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/feed/messages?channel=${ch}&limit=50`).then(r => r.json()).then(d => setFeedMessages(d.messages || [])).catch(() => {});
   };
 
   const sendFeedMessage = async () => {
@@ -362,7 +362,7 @@ export default function Dashboard() {
       body: JSON.stringify({ content: feedInput, channel: feedChannel === "all" ? "general" : feedChannel }),
     }).catch(() => {});
     setFeedInput("");
-    fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/feed/messages?channel=${feedChannel}&limit=50`).then(r => r.json()).then(d => setFeedMessages(d.messages || [])).catch(() => {});
   };
 
   const markAllRead = async () => {
