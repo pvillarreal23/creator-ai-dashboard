@@ -9,8 +9,8 @@ export async function GET() {
       {
         id: 'social-1',
         platform: 'YouTube',
-        username: 'marcuschen_empire',
-        handle: '@AgentIQ_Channel',
+        username: 'theedgeai',
+        handle: '@theedgeai',
         status: 'active',
         followers: 125000,
         engaged_24h: 8500,

@@ -134,20 +134,20 @@ const SC: Record<Status, string> = {
 const STATUSES: Status[] = ["RESEARCHED","TITLED","SCRIPTED","PRODUCTION","READY","SCHEDULED","LIVE"];
 
 const initialChannels: Channel[] = [
-  { id:"1", name:"AgentIQ", subs:"0", views:"0", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"+0%", vids:"0", ctr:"0%", revenue:"$0", nextVideo:"Apr 2" },
-  { id:"2", name:"Cash Flow Code", subs:"—", views:"—", freq:"2x/week", color:"from-green-600 to-emerald-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 7" },
-  { id:"3", name:"Mind Shift", subs:"—", views:"—", freq:"1x/week", color:"from-purple-600 to-pink-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Month 13" },
+  { id:"1", name:"The AI Edge", subs:"47K", views:"—", freq:"3x/week", color:"from-blue-600 to-cyan-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Apr 2" },
+  { id:"2", name:"Cash Flow Code", subs:"—", views:"—", freq:"2x/week", color:"from-green-600 to-emerald-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Planned" },
+  { id:"3", name:"Mind Shift", subs:"—", views:"—", freq:"1x/week", color:"from-purple-600 to-pink-500", growth:"—", vids:"—", ctr:"—", revenue:"—", nextVideo:"Planned" },
 ];
 
 const initialPipeline: PipelineItem[] = [
-  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 2", views:"-" },
-  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 5", views:"-" },
+  { id:"1", title:"5 AI Tools Replacing Jobs in 2026", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 2", views:"-" },
+  { id:"2", title:"Claude vs GPT-4o: Real Comparison", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 5", views:"-" },
   { id:"4", title:"How I Built a $10K/mo AI Business", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 12", views:"-" },
   { id:"5", title:"The Psychology of Going Viral", channel:"Mind Shift", status:"TITLED", date:"Apr 14", views:"-" },
-  { id:"6", title:"AI Agents Will Replace SaaS", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 16", views:"-" },
+  { id:"6", title:"AI Agents Will Replace SaaS", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 16", views:"-" },
   { id:"7", title:"Why Most Side Hustles Fail in 2026", channel:"Cash Flow Code", status:"PRODUCTION", date:"Apr 19", views:"-" },
   { id:"8", title:"How YouTube Algorithm Actually Works", channel:"Mind Shift", status:"TITLED", date:"Apr 21", views:"-" },
-  { id:"3", title:"How Make.com Automates Everything", channel:"AgentIQ", status:"SCRIPTED", date:"Apr 9", views:"-" },
+  { id:"3", title:"How Make.com Automates Everything", channel:"The AI Edge", status:"SCRIPTED", date:"Apr 9", views:"-" },
 ];
 
 const SKILLS = [
@@ -1052,7 +1052,7 @@ export default function Dashboard() {
                             ]},
                             { cat: "Growth", color: "green", icon: "📈", prompts: [
                               "Research trending topics in AI, finance, and psychology for this month",
-                              "Develop a strategy to hit 10K subscribers on AgentIQ in 90 days",
+                              "Develop a strategy to hit 100K subscribers on The AI Edge in 90 days",
                               "Audit our SEO across all channels and recommend improvements",
                             ]},
                             { cat: "Revenue", color: "amber", icon: "💰", prompts: [
