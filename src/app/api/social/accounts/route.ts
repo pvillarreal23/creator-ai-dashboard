@@ -4,63 +4,28 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Return social media accounts data
     const socialAccounts = [
-      {
-        id: 'social-1',
-        platform: 'YouTube',
-        username: 'marcuschen_empire',
-        handle: '@AgentIQ_Channel',
-        status: 'active',
-        followers: 125000,
-        engaged_24h: 8500,
-        last_post: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'social-2',
-        platform: 'Instagram',
-        username: 'agentiq.ai',
-        handle: '@agentiq.ai',
-        status: 'active',
-        followers: 45000,
-        engaged_24h: 3200,
-        last_post: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'social-3',
-        platform: 'TikTok',
-        username: 'agentiq_shorts',
-        handle: '@agentiq_shorts',
-        status: 'active',
-        followers: 78000,
-        engaged_24h: 5600,
-        last_post: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'social-4',
-        platform: 'Twitter/X',
-        username: 'agentiq_ai',
-        handle: '@agentiq_ai',
-        status: 'active',
-        followers: 32000,
-        engaged_24h: 2100,
-        last_post: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      },
-      {
-        id: 'social-5',
-        platform: 'LinkedIn',
-        username: 'agentiq',
-        handle: 'agentiq',
-        status: 'active',
-        followers: 18000,
-        engaged_24h: 900,
-        last_post: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-      },
+      // YouTube
+      { id: 'yt-1', platform: 'youtube', account_name: 'AgentIQ', display_name: 'AgentIQ Channel', channel_brand: 'AgentIQ — AI & Automation', managed_by: 'ai-and-tech-channel-manager', status: 'active', followers: '0' },
+      { id: 'yt-2', platform: 'youtube', account_name: 'CashFlowCode', display_name: 'Cash Flow Code', channel_brand: 'Cash Flow Code — Business & Finance', managed_by: 'finance-and-business-channel-manager', status: 'pending_creation', followers: '—' },
+      { id: 'yt-3', platform: 'youtube', account_name: 'MindShiftYT', display_name: 'Mind Shift', channel_brand: 'Mind Shift — Psychology & Behavior', managed_by: 'psychology-and-behavior-channel-manager', status: 'pending_creation', followers: '—' },
+      // Instagram
+      { id: 'ig-1', platform: 'instagram', account_name: 'agentiq.ai', display_name: 'AgentIQ', channel_brand: 'AgentIQ — AI & Automation', managed_by: 'social-media-manager', status: 'active', followers: '—' },
+      { id: 'ig-2', platform: 'instagram', account_name: 'cashflowcode', display_name: 'Cash Flow Code', channel_brand: 'Cash Flow Code — Business & Finance', managed_by: 'social-media-manager', status: 'pending_creation', followers: '—' },
+      { id: 'ig-3', platform: 'instagram', account_name: 'mindshift.io', display_name: 'Mind Shift', channel_brand: 'Mind Shift — Psychology & Behavior', managed_by: 'social-media-manager', status: 'pending_creation', followers: '—' },
+      // TikTok
+      { id: 'tt-1', platform: 'tiktok', account_name: 'agentiq_ai', display_name: 'AgentIQ', channel_brand: 'AgentIQ — AI & Automation', managed_by: 'shorts-and-clips-agent', status: 'active', followers: '—' },
+      { id: 'tt-2', platform: 'tiktok', account_name: 'cashflowcode', display_name: 'Cash Flow Code', channel_brand: 'Cash Flow Code — Business & Finance', managed_by: 'shorts-and-clips-agent', status: 'pending_creation', followers: '—' },
+      // Twitter/X
+      { id: 'tw-1', platform: 'twitter', account_name: 'agentiq_ai', display_name: 'AgentIQ', channel_brand: 'AgentIQ — AI & Automation', managed_by: 'secretary-agent', status: 'active', followers: '—' },
+      { id: 'tw-2', platform: 'twitter', account_name: 'cashflowcode', display_name: 'Cash Flow Code', channel_brand: 'Cash Flow Code — Business & Finance', managed_by: 'secretary-agent', status: 'pending_creation', followers: '—' },
+      // LinkedIn
+      { id: 'li-1', platform: 'linkedin', account_name: 'agentiq', display_name: 'AgentIQ', channel_brand: 'AgentIQ — AI & Automation', managed_by: 'community-manager', status: 'active', followers: '—' },
     ];
 
-    return NextResponse.json({ accounts: socialAccounts, total: socialAccounts.length });
+    return NextResponse.json(socialAccounts);
   } catch (error) {
     console.error('Error in social accounts API:', error);
-    return NextResponse.json({ accounts: [], total: 0 });
+    return NextResponse.json([]);
   }
 }

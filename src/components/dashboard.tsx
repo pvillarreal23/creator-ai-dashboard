@@ -6,7 +6,7 @@ type Tab = "overview" | "pipeline" | "channels" | "skills" | "automation" | "ana
 interface SocialAccountInfo { id: string; platform: string; account_name: string; display_name: string; channel_brand: string; managed_by: string; status: string; followers: string; }
 interface VaultEntry { id: string; service: string; account_name: string; category: string; platform_url: string; notes: string; api_key_hint: string; managed_by: string; status: string; }
 
-interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
+interface AgentInfo { id: string; name: string; role: string; avatar_color: string; department: string; avatar?: string; reports_to: string | null; direct_reports: string[]; collaborates_with: string[]; }
 interface ActivityData { running_count: number; completed_today: number; pending_escalations: number; total_agents: number; agent_statuses: { id: string; name: string; role: string; department: string; avatar_color: string; status: string; current_task: string }[]; recent_runs: { id: string; agent_id: string; task_name: string; status: string; summary: string | null; completed_at: string | null; thread_id: string | null }[]; escalations: { id: string; agent_id: string; reason: string; severity: string; thread_id: string; created_at: string }[] }
 interface ScheduledTaskInfo { id: string; agent_id: string; agent_name: string; name: string; cron_expression: string; enabled: boolean; last_run: string | null; category: string }
 interface FeedMsg { id: string; agent_id: string; agent_name: string; agent_color: string; channel: string; content: string; message_type: string; severity: string; thread_id: string | null; pinned: boolean; created_at: string; read: boolean }
@@ -61,8 +61,18 @@ const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "fema
   "compliance-officer":                    { humanName: "David Reeves",     gender: "male"   },
 };
 
-function getAgentAvatar(agentId: string): string {
-  return `/avatars/${agentId}.jpg`;
+// Avatar files use {id}-agent.jpg except when id already ends with "-agent"
+const AVATAR_OVERRIDES: Record<string, string> = {
+  'quality-assurance-lead': '/avatars/qa-lead-agent.jpg',
+  'automation-engineer': '/avatars/workflow-orchestrator-agent.jpg',
+  'voice-director': '/avatars/scriptwriter-agent.jpg',
+};
+
+function getAgentAvatar(agentId: string, avatarUrl?: string): string {
+  if (avatarUrl) return avatarUrl;
+  if (AVATAR_OVERRIDES[agentId]) return AVATAR_OVERRIDES[agentId];
+  if (agentId.endsWith('-agent')) return `/avatars/${agentId}.jpg`;
+  return `/avatars/${agentId}-agent.jpg`;
 }
 
 function getHumanName(agentId: string): string {
@@ -210,7 +220,7 @@ function BracketCard({ agent }: { agent: AgentInfo }) {
   return (
     <div className={`${ts.bg} border ${ts.border} rounded-lg px-3 py-2 flex items-center gap-2.5 min-w-0`}>
       <div className={`w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ${ts.ring}`}>
-        <img src={getAgentAvatar(agent.id)} alt={agent.name} className="w-full h-full object-cover" />
+        <img src={getAgentAvatar(agent.id, agent.avatar)} alt={agent.name} className="w-full h-full object-cover" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold truncate">{getHumanName(agent.id) || agent.name}</p>
@@ -279,7 +289,7 @@ function BracketGroup({ parent, children, agents, depth }: { parent: AgentInfo; 
 export default function Dashboard() {
   const [tab, setTab] = useState<Tab>("overview");
   const [pipeline, setPipeline] = useState<PipelineItem[]>(initialPipeline);
-  const [channels] = useState<Channel[]>(initialChannels);
+  const [channels, setChannels] = useState<Channel[]>(initialChannels);
   const [editItem, setEditItem] = useState<PipelineItem | null>(null);
   const [showNewModal, setShowNewModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState<Status | "ALL">("ALL");
@@ -317,16 +327,17 @@ export default function Dashboard() {
 
   // Fetch agents and activity on mount
   useEffect(() => {
-    fetch(`/api/agents`).then(r => r.json()).then(setAgents).catch(() => {});
-    fetch(`/api/threads`).then(r => r.json()).then(setThreads).catch(() => {});
+    fetch(`/api/agents`).then(r => r.json()).then(d => setAgents(Array.isArray(d) ? d : d.agents || [])).catch(() => {});
+    fetch(`/api/threads`).then(r => r.json()).then(d => setThreads(Array.isArray(d) ? d : d.threads || [])).catch(() => {});
     fetch(`/api/scheduler/activity`).then(r => r.json()).then(setActivityData).catch(() => {});
-    fetch(`/api/scheduler/tasks`).then(r => r.json()).then(setScheduledTasks).catch(() => {});
-    fetch(`/api/feed/messages?limit=50`).then(r => r.json()).then(setFeedMessages).catch(() => {});
+    fetch(`/api/scheduler/tasks`).then(r => r.json()).then(d => setScheduledTasks(Array.isArray(d) ? d : d.tasks || [])).catch(() => {});
+    fetch(`/api/feed/messages?limit=50`).then(r => r.json()).then(d => setFeedMessages(Array.isArray(d) ? d : d.messages || [])).catch(() => {});
     fetch(`/api/feed/unread_count`).then(r => r.json()).then(setFeedUnread).catch(() => {});
-    fetch(`/api/social/accounts`).then(r => r.json()).then(setSocialAccounts).catch(() => {});
-    fetch(`/api/vault/credentials`).then(r => r.json()).then(setVaultEntries).catch(() => {});
-    fetch(`/api/tools`).then(r => r.json()).then(setToolsList).catch(() => {});
+    fetch(`/api/social/accounts`).then(r => r.json()).then(d => setSocialAccounts(Array.isArray(d) ? d : d.accounts || [])).catch(() => {});
+    fetch(`/api/vault/credentials`).then(r => r.json()).then(d => setVaultEntries(Array.isArray(d) ? d : d.credentials || [])).catch(() => {});
+    fetch(`/api/tools`).then(r => r.json()).then(d => setToolsList(Array.isArray(d) ? d : d.tools || [])).catch(() => {});
     fetch(`/api/tools/scenarios`).then(r => r.json()).then(setScenariosList).catch(() => {});
+    fetch(`/api/channels`).then(r => r.json()).then(d => setChannels(Array.isArray(d) ? d : d.channels || [])).catch(() => {});
   }, []);
 
   // Poll activity + feed every 10 seconds
