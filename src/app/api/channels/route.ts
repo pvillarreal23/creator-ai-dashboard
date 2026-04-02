@@ -7,13 +7,14 @@ export async function GET() {
     const channels = [
       {
         id: '1',
-        name: 'AgentIQ',
-        subs: '0',
+        name: 'The AI Edge',
+        handle: '@theedgeai',
+        subs: '47K',
         views: '0',
         freq: '3x/week',
         color: 'from-blue-600 to-cyan-500',
-        growth: '+0%',
-        vids: '0',
+        growth: '+12%',
+        vids: '3',
         ctr: '0%',
         revenue: '$0',
         nextVideo: 'Apr 2',
