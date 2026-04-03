@@ -46,7 +46,7 @@ export const PRODUCTION_BIBLE = {
     }
   },
   elevenlabs: {
-    voiceId: "pNInz6obpgDQGcFmaJgB", // Adam — update after voice test
+    voiceId: "onwK4e9ZLuTAKqWW03F9", // Daniel — British, journalistic, confirmed @theedgeai voice
     model: "eleven_multilingual_v2",
     hookSettings: { stability: 0.40, similarity_boost: 0.80, style: 0.25 },
     tutorialSettings: { stability: 0.55, similarity_boost: 0.85, style: 0.10 },
