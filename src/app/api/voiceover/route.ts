@@ -2,10 +2,10 @@ export const dynamic = 'force-dynamic';
 
 const DEFAULT_VOICE_ID = '21m00Tcm4TlvDq8ikWAM';
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, voiceId = DEFAULT_VOICE_ID } = body;
+    const { text, voiceId = DEFAULT_VOICE_ID } = body as { text: string; voiceId?: string };
     if (!text || !text.trim()) return new Response(JSON.stringify({ error: 'Missing text' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) return new Response(JSON.stringify({ error: 'ElevenLabs API key not configured' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
@@ -14,6 +14,6 @@ export async function POST(request) {
     const buf = await res.arrayBuffer();
     return new Response(buf, { status: 200, headers: { 'Content-Type': 'audio/mpeg', 'Content-Disposition': 'attachment; filename="voiceover.mp3"', 'Cache-Control': 'no-store' } });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : String(e) }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
