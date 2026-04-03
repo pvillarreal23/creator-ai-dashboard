@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 
-const DEFAULT_VOICE_ID = 'pNInz6obpgDQGcFmaJgB';
+const DEFAULT_VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Adam — deep, authoritative, best for tech YouTube
 
 export async function POST(request: Request) {
   try {
