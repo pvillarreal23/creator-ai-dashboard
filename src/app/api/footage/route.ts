@@ -1,6 +1,5 @@
 export const dynamic = 'force-dynamic';
-
-export async function GET(request) {
+export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('query') ?? 'ai tools';
   const per_page = searchParams.get('per_page') ?? '10';
