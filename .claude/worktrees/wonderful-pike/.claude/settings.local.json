@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vercel env:*)",
+      "Bash(npx vercel:*)",
+      "Bash(npm --version)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/pedrovillarreal/.nvm/versions/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(export PATH=\"$PATH:/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/opt/node/bin\")",
+      "Bash(export PATH=\"$PATH:/opt/homebrew/bin\")"
+    ]
+  }
+}

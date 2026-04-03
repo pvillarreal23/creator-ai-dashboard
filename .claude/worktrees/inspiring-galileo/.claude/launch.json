@@ -1,0 +1,13 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["/Users/pedrovillarreal/creator-ai-dashboard/node_modules/.bin/next", "dev"],
+      "port": 3000,
+      "autoPort": true,
+      "cwd": "."
+    }
+  ]
+}

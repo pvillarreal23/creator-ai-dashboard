@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/pedrovillarreal/creator-ai-dashboard/.claude/worktrees/suspicious-clarke status --short)",
+      "Bash(git -C /Users/pedrovillarreal/creator-ai-dashboard show main:src/app/api/channels/route.ts)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)"
+    ]
+  }
+}

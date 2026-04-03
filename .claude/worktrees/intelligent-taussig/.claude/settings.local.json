@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://creator-ai-dashboard.vercel.app/api/channels)"
+    ]
+  }
+}

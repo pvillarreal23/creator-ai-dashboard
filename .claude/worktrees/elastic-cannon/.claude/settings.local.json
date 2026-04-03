@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(md5)",
+      "Bash(sed -i '' \"s/name: ''''AgentIQ''''/name: ''''The AI Edge''''/\" src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/subs: ''''0'''',/handle: ''''@theedgeai'''',\\\\n        subs: ''''47K'''',/\" src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/growth: ''''+0%''''/growth: ''''+12%''''/\" src/app/api/channels/route.ts)"
+    ]
+  }
+}

@@ -129,7 +129,7 @@ const DEPT_COLORS: Record<string, { dot: string; label: string }> = {
 type Status = "RESEARCHED" | "TITLED" | "SCRIPTED" | "PRODUCTION" | "READY" | "SCHEDULED" | "LIVE";
 
 interface PipelineItem { id: string; title: string; channel: string; status: Status; date: string; views: string; }
-interface Channel { id: string; name: string; subs: string; views: string; freq: string; color: string; growth: string; vids: string; ctr: string; revenue: string; nextVideo: string; }
+interface Channel { id: string; name: string; subs: string; views: string; freq: string; color: string; growth: string; vids: string; ctr: string; revenue: string; nextVideo: string; subsCount?: number; revenueAmount?: number; vidsCount?: number; }
 
 const SC: Record<Status, string> = {
   RESEARCHED: "bg-purple-500/20 text-purple-400 border-purple-500/30",

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_start",
+      "Bash(export PATH=\"/usr/local/bin:/opt/homebrew/bin:$PATH\")",
+      "Bash(npm --version)",
+      "Read(//opt/homebrew/Cellar/node@22/22.22.1_3/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/**)"
+    ]
+  }
+}

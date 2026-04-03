@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i '' \"s/name: ''AgentIQ''/name: ''The AI Edge''/\" /Users/pedrovillarreal/creator-ai-dashboard/src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/handle: '''',/handle: ''@theedgeai'',/\" /Users/pedrovillarreal/creator-ai-dashboard/src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/subs: ''0''/subs: ''47K''/\" /Users/pedrovillarreal/creator-ai-dashboard/src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/growth: ''+0%''/growth: ''+12%''/\" /Users/pedrovillarreal/creator-ai-dashboard/src/app/api/channels/route.ts)",
+      "Bash(sed -i '' \"s/vids: ''0''/vids: ''3''/\" /Users/pedrovillarreal/creator-ai-dashboard/src/app/api/channels/route.ts)"
+    ]
+  }
+}
