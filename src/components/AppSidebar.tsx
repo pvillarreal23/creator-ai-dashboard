@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Inbox, PenSquare, Users, Network, LayoutDashboard, ChevronLeft, ChevronRight } from "lucide-react";
+import { Inbox, PenSquare, Users, Network, LayoutDashboard, ChevronLeft, ChevronRight, DollarSign } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, color: "text-blue-400" },
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/compose", label: "Compose", icon: PenSquare, color: "text-purple-400" },
   { href: "/agents", label: "Agents", icon: Users, color: "text-green-400" },
   { href: "/org", label: "Org Chart", icon: Network, color: "text-amber-400" },
+  { href: "/costs", label: "Cost Control", icon: DollarSign, color: "text-[#00D4FF]" },
 ];
 
 export default function AppSidebar() {
