@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/tools?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const tools = [
       { id: 'tool-1', name: 'Claude AI', category: 'text', icon: '🧠', status: 'active', description: 'Core AI reasoning — all agent tasks, scripting, research, and strategy run on Claude', website: 'https://anthropic.com', api_key_env: 'ANTHROPIC_API_KEY', managed_by: 'ceo-agent' },
       { id: 'tool-2', name: 'ElevenLabs', category: 'voice', icon: '🎙️', status: 'active', description: 'Studio-quality AI voiceover generation for all video scripts', website: 'https://elevenlabs.io', api_key_env: 'ELEVENLABS_API_KEY', managed_by: 'voice-director' },
@@ -18,10 +29,6 @@ export async function GET() {
       { id: 'tool-11', name: 'GitHub', category: 'automation', icon: '🐙', status: 'active', description: 'Code repository for agent skill files, prompts, and automation scripts', website: 'https://github.com', api_key_env: 'GITHUB_TOKEN', managed_by: 'automation-engineer' },
       { id: 'tool-12', name: 'Vercel', category: 'automation', icon: '▲', status: 'active', description: 'Dashboard hosting and continuous deployment via GitHub Actions', website: 'https://vercel.com', api_key_env: 'VERCEL_TOKEN', managed_by: 'automation-engineer' },
     ];
-
     return NextResponse.json(tools);
-  } catch (error) {
-    console.error('Error in tools API:', error);
-    return NextResponse.json([]);
   }
 }

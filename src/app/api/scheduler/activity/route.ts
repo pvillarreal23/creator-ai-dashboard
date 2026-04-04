@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 // All 32 agents with realistic activity statuses
 const AGENT_STATUSES = [
   { id: 'ceo-agent', name: 'CEO Agent', role: 'Chief Executive Officer', department: 'executive', avatar_color: 'yellow', status: 'working', current_task: 'Reviewing Q2 content strategy and approving budget allocation' },
@@ -38,8 +40,17 @@ const AGENT_STATUSES = [
   { id: 'compliance-officer', name: 'Compliance Officer', role: 'Compliance Officer', department: 'general', avatar_color: 'slate', status: 'done', current_task: 'Reviewed 2 sponsored video scripts for FTC compliance' },
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/scheduler/activity?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const working = AGENT_STATUSES.filter(a => a.status === 'working').length;
     const done = AGENT_STATUSES.filter(a => a.status === 'done').length;
 
@@ -68,18 +79,6 @@ export async function GET() {
         },
       ],
     };
-
     return NextResponse.json(activityData);
-  } catch (error) {
-    console.error('Error in scheduler activity API:', error);
-    return NextResponse.json({
-      running_count: 0,
-      completed_today: 0,
-      pending_escalations: 0,
-      total_agents: 0,
-      agent_statuses: [],
-      recent_runs: [],
-      escalations: [],
-    });
   }
 }

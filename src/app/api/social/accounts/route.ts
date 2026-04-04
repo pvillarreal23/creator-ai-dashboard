@@ -2,11 +2,22 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/social/accounts?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const socialAccounts = [
       // YouTube
-      { id: 'yt-1', platform: 'youtube', account_name: 'theedgeai', display_name: 'The AI Edge', channel_brand: 'The AI Edge — AI & Automation (@theedgeai)', managed_by: 'ai-and-tech-channel-manager', status: 'active', followers: '47000' },
+      { id: 'yt-1', platform: 'youtube', account_name: 'theedgeai', display_name: 'The AI Edge', channel_brand: 'The AI Edge — AI & Automation (@theedgeai)', managed_by: 'ai-and-tech-channel-manager', status: 'active', followers: '—' },
       { id: 'yt-2', platform: 'youtube', account_name: 'CashFlowCode', display_name: 'Cash Flow Code', channel_brand: 'Cash Flow Code — Business & Finance', managed_by: 'finance-and-business-channel-manager', status: 'pending_creation', followers: '—' },
       { id: 'yt-3', platform: 'youtube', account_name: 'MindShiftYT', display_name: 'Mind Shift', channel_brand: 'Mind Shift — Psychology & Behavior', managed_by: 'psychology-and-behavior-channel-manager', status: 'pending_creation', followers: '—' },
       // Instagram
@@ -22,10 +33,6 @@ export async function GET() {
       // LinkedIn
       { id: 'li-1', platform: 'linkedin', account_name: 'theedgeai', display_name: 'The AI Edge', channel_brand: 'The AI Edge — AI & Automation', managed_by: 'community-manager', status: 'active', followers: '—' },
     ];
-
     return NextResponse.json(socialAccounts);
-  } catch (error) {
-    console.error('Error in social accounts API:', error);
-    return NextResponse.json([]);
   }
 }

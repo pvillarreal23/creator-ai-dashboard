@@ -2,9 +2,19 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
-    // Return tool usage scenarios
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/tools/scenarios?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const scenarios = [
       {
         id: 'scenario-1',
@@ -47,10 +57,6 @@ export async function GET() {
         last_run: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
       },
     ];
-
     return NextResponse.json({ scenarios, total: scenarios.length });
-  } catch (error) {
-    console.error('Error in tools scenarios API:', error);
-    return NextResponse.json({ scenarios: [], total: 0 });
   }
 }

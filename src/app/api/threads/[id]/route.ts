@@ -2,13 +2,22 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
-    const { id } = params;
-
+    const res = await fetch(`${BACKEND}/api/threads/${id}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const thread = {
       id,
       subject: id === 'thread-1' ? 'Q2 Content Strategy Review'
@@ -48,10 +57,6 @@ export async function GET(
         },
       ],
     };
-
     return NextResponse.json(thread);
-  } catch (error) {
-    console.error('Error fetching thread:', error);
-    return NextResponse.json({ error: 'Failed to fetch thread' }, { status: 400 });
   }
 }

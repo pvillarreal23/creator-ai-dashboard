@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/scheduler/tasks?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const scheduledTasks = [
       {
         id: 'task-1',
@@ -86,10 +97,6 @@ export async function GET() {
         category: 'community',
       },
     ];
-
     return NextResponse.json(scheduledTasks);
-  } catch (error) {
-    console.error('Error in scheduler tasks API:', error);
-    return NextResponse.json([]);
   }
 }

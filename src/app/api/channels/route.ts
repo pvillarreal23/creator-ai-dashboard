@@ -4,13 +4,14 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // No backend endpoint for channels yet — return mock data directly
     const channels = [
       {
         id: '1',
         name: 'The AI Edge',
         handle: '@theedgeai',
-        subs: '47K',
-        subsCount: 47000,
+        subs: '—',
+        subsCount: 0,
         views: '0',
         viewsCount: 0,
         freq: '3x/week',
@@ -60,8 +61,7 @@ export async function GET() {
     ];
 
     return NextResponse.json(channels);
-  } catch (error) {
-    console.error('Error in channels API:', error);
+  } catch {
     return NextResponse.json([]);
   }
 }

@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/vault/credentials?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const vaultEntries = [
       // Workstations
       { id: 'ws-1', service: 'MacBook Pro M3', account_name: 'pedro@theedgeai.com', category: 'workstation', platform_url: '', notes: 'Primary development machine', api_key_hint: '', managed_by: 'operations-vp', status: 'active' },
@@ -24,10 +35,6 @@ export async function GET() {
       // Hosting
       { id: 'host-1', service: 'Vercel Pro', account_name: 'pedro@theedgeai.com', category: 'hosting', platform_url: 'https://vercel.com/dashboard', notes: 'Dashboard + Next.js app hosting', api_key_hint: '', managed_by: 'automation-engineer', status: 'active' },
     ];
-
     return NextResponse.json(vaultEntries);
-  } catch (error) {
-    console.error('Error in vault credentials API:', error);
-    return NextResponse.json([]);
   }
 }

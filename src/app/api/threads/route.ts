@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const res = await fetch(`${BACKEND}/api/threads?${searchParams}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    const data = await res.json();
+    return NextResponse.json(data);
+  } catch {
+    // Fallback mock data when backend is unavailable
     const threads = [
       {
         id: 'thread-1',
@@ -30,30 +41,30 @@ export async function GET() {
         updated_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       },
     ];
-
     return NextResponse.json(threads);
-  } catch (error) {
-    console.error('Error in threads API:', error);
-    return NextResponse.json([]);
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
+    const res = await fetch(`${BACKEND}/api/threads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}`);
+    return NextResponse.json(await res.json(), { status: res.status });
+  } catch {
+    // Fallback mock data when backend is unavailable
     const newThread = {
       id: `thread-${Date.now()}`,
-      subject: body.subject || 'New Thread',
-      participants: body.participants || [],
+      subject: 'New Thread',
+      participants: [],
       messages: [],
       status: 'active',
       updated_at: new Date().toISOString(),
     };
-
     return NextResponse.json(newThread, { status: 201 });
-  } catch (error) {
-    console.error('Error creating thread:', error);
-    return NextResponse.json({ error: 'Failed to create thread' }, { status: 400 });
   }
 }
