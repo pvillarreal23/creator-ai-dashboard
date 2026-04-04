@@ -1,6 +1,10 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { LayoutDashboard, Clapperboard, Bot, TrendingUp, KeyRound, Search, Bell, Settings, ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import { AGENT_PERSONAS, getAgentAvatar, getHumanName, TIER_STYLES, getAgentTier, DEPT_COLORS } from "@/lib/constants";
+import type { Tier } from "@/lib/constants";
+export { AGENT_PERSONAS, getAgentAvatar, getHumanName, TIER_STYLES, getAgentTier, DEPT_COLORS };
+export type { Tier };
 
 // Shared types
 export type Zone = "mission" | "content" | "workforce" | "growth" | "vault";
@@ -12,72 +16,6 @@ export interface ActivityData { running_count: number; completed_today: number; 
 export interface FeedMsg { id: string; agent_id: string; agent_name: string; agent_color: string; channel: string; content: string; message_type: string; severity: string; thread_id: string | null; pinned: boolean; created_at: string; read: boolean }
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-// Agent personas
-export const AGENT_PERSONAS: Record<string, { humanName: string; gender: "male" | "female" }> = {
-  "ceo-agent": { humanName: "Marcus Chen", gender: "male" },
-  "content-vp-agent": { humanName: "Sofia Rivera", gender: "female" },
-  "operations-vp-agent": { humanName: "James Okafor", gender: "male" },
-  "analytics-vp-agent": { humanName: "Priya Sharma", gender: "female" },
-  "monetization-vp-agent": { humanName: "Daniel Kim", gender: "male" },
-  "ai-and-tech-channel-manager-agent": { humanName: "Aisha Patel", gender: "female" },
-  "finance-channel-manager-agent": { humanName: "Ryan Mitchell", gender: "male" },
-  "psychology-channel-manager-agent": { humanName: "Elena Vasquez", gender: "female" },
-  "scriptwriter-agent": { humanName: "Noah Thompson", gender: "male" },
-  "hook-specialist-agent": { humanName: "Mia Jackson", gender: "female" },
-  "storyteller-agent": { humanName: "Liam O'Connor", gender: "male" },
-  "shorts-and-clips-agent": { humanName: "Zara Ahmed", gender: "female" },
-  "thumbnail-designer-agent": { humanName: "Kai Nakamura", gender: "male" },
-  "video-editor-agent": { humanName: "Isabella Torres", gender: "female" },
-  "seo-specialist-agent": { humanName: "Ethan Park", gender: "male" },
-  "project-manager-agent": { humanName: "Olivia Bennett", gender: "female" },
-  "workflow-orchestrator-agent": { humanName: "Amir Hassan", gender: "male" },
-  "qa-lead-agent": { humanName: "Hannah Lee", gender: "female" },
-  "reflection-council-agent": { humanName: "Victor Andrei", gender: "male" },
-  "senior-researcher-agent": { humanName: "Grace Nguyen", gender: "female" },
-  "trend-researcher-agent": { humanName: "Leo Martinez", gender: "male" },
-  "data-analyst-agent": { humanName: "Chloe Williams", gender: "female" },
-  "partnership-manager-agent": { humanName: "Omar Farouk", gender: "male" },
-  "affiliate-coordinator-agent": { humanName: "Natalie Brooks", gender: "female" },
-  "digital-product-manager-agent": { humanName: "Raj Kapoor", gender: "male" },
-  "newsletter-strategist-agent": { humanName: "Sarah Lindgren", gender: "female" },
-  "community-manager-agent": { humanName: "Tyler Robinson", gender: "male" },
-  "social-media-manager-agent": { humanName: "Jade Moreau", gender: "female" },
-  "secretary-agent": { humanName: "Emma Fischer", gender: "female" },
-  "compliance-officer-agent": { humanName: "David Reeves", gender: "male" },
-  "web-designer-agent": { humanName: "Luna Chang", gender: "female" },
-  "web-developer-agent": { humanName: "Alex Petrov", gender: "male" },
-};
-
-export function getAgentAvatar(agentId: string): string { return `/avatars/${agentId}.jpg`; }
-export function getHumanName(agentId: string): string { return AGENT_PERSONAS[agentId]?.humanName || ""; }
-
-export type Tier = "C-Suite" | "VP" | "Manager" | "Specialist" | "Support";
-export const TIER_STYLES: Record<Tier, { bg: string; border: string; text: string; badge: string; ring: string }> = {
-  "C-Suite": { bg: "bg-yellow-500/5", border: "border-yellow-500/30", text: "text-yellow-400", badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30", ring: "ring-yellow-500/60" },
-  "VP": { bg: "bg-purple-500/5", border: "border-purple-500/30", text: "text-purple-400", badge: "bg-purple-500/20 text-purple-300 border-purple-500/30", ring: "ring-purple-500/60" },
-  "Manager": { bg: "bg-blue-500/5", border: "border-blue-500/30", text: "text-blue-400", badge: "bg-blue-500/20 text-blue-300 border-blue-500/30", ring: "ring-blue-500/60" },
-  "Specialist": { bg: "bg-cyan-500/5", border: "border-cyan-500/30", text: "text-cyan-400", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30", ring: "ring-cyan-500/60" },
-  "Support": { bg: "bg-emerald-500/5", border: "border-emerald-500/30", text: "text-emerald-400", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30", ring: "ring-emerald-500/60" },
-};
-
-export function getAgentTier(agentId: string): Tier {
-  if (agentId === "ceo-agent") return "C-Suite";
-  if (agentId.includes("-vp-")) return "VP";
-  if (agentId.includes("channel-manager")) return "Manager";
-  if (["project-manager-agent", "workflow-orchestrator-agent", "secretary-agent"].includes(agentId)) return "Support";
-  return "Specialist";
-}
-
-export const DEPT_COLORS: Record<string, { dot: string; label: string }> = {
-  executive: { dot: "bg-yellow-400", label: "Executive" },
-  content: { dot: "bg-blue-400", label: "Content" },
-  operations: { dot: "bg-amber-400", label: "Operations" },
-  analytics: { dot: "bg-emerald-400", label: "Analytics" },
-  monetization: { dot: "bg-red-400", label: "Monetization" },
-  admin: { dot: "bg-slate-400", label: "Admin" },
-  general: { dot: "bg-gray-400", label: "General" },
-};
 
 const ZONES: { id: Zone; label: string; icon: any; color: string; desc: string }[] = [
   { id: "mission", label: "Mission Control", icon: LayoutDashboard, color: "text-blue-400", desc: "Overview + Analytics" },
@@ -139,7 +77,7 @@ export default function DashboardLayout({ children }: Props) {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shrink-0">
             <Clapperboard className="w-4 h-4" />
           </div>
-          {sidebarOpen && <span className="text-sm font-bold">YouTube Empire</span>}
+          {sidebarOpen && <span className="text-sm font-bold">V-Real AI</span>}
         </div>
 
         {/* Zones */}

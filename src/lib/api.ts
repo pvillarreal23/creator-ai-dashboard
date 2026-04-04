@@ -75,4 +75,39 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  // Feed
+  getFeedMessages: (channel?: string, limit?: number) =>
+    fetchApi<{ messages: any[]; total: number }>(`/api/feed/messages?channel=${channel || 'general'}&limit=${limit || 50}`),
+  getUnreadCount: () => fetchApi<any>('/api/feed/unread_count'),
+  sendFeedMessage: (data: { channel: string; content: string }) =>
+    fetchApi<any>('/api/feed/send', { method: 'POST', body: JSON.stringify(data) }),
+  markAllRead: () => fetchApi<any>('/api/feed/mark_all_read', { method: 'POST' }),
+
+  // Scheduler
+  getSchedulerTasks: () => fetchApi<any[]>('/api/scheduler/tasks'),
+  getActivity: () => fetchApi<any>('/api/scheduler/activity'),
+  runTask: (taskId: string) => fetchApi<any>(`/api/scheduler/tasks/${taskId}/run`, { method: 'POST' }),
+  resolveEscalation: (id: string) => fetchApi<any>(`/api/scheduler/escalations/${id}/resolve`, { method: 'POST' }),
+
+  // Social
+  getSocialAccounts: () => fetchApi<any[]>('/api/social/accounts'),
+
+  // Vault
+  getVaultCredentials: () => fetchApi<any[]>('/api/vault/credentials'),
+
+  // Tools
+  getTools: () => fetchApi<any[]>('/api/tools'),
+  getToolScenarios: () => fetchApi<any[]>('/api/tools/scenarios'),
+
+  // Channels
+  getChannels: () => fetchApi<any[]>('/api/channels'),
+
+  // Production
+  getProductionJobs: () => fetchApi<any[]>('/api/production/jobs'),
+  createProductionJob: (data: { title: string; channel: string; target_date?: string }) =>
+    fetchApi<any>('/api/production/jobs', { method: 'POST', body: JSON.stringify(data) }),
+  advanceJob: (jobId: string) => fetchApi<any>(`/api/production/jobs/${jobId}/advance`, { method: 'POST' }),
+  approveJob: (jobId: string) => fetchApi<any>(`/api/production/jobs/${jobId}/approve`, { method: 'POST' }),
+  rejectJob: (jobId: string) => fetchApi<any>(`/api/production/jobs/${jobId}/reject`, { method: 'POST' }),
 };
