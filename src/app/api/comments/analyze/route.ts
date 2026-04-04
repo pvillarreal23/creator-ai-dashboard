@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required field: comments (non-empty array)' }, { status: 400 });
     }
 
-    const prompt = `You are the Community Manager for @theedgeai. Analyze these YouTube comments for insights.
+    const prompt = `You are the Community Manager for @VRealAI. Analyze these YouTube comments for insights.
 
 VIDEO TITLE: ${body.video_title ?? 'Unknown'}
 TOPIC: ${body.topic ?? 'AI tools'}

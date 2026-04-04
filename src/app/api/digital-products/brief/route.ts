@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: topic, tool_name' }, { status: 400 });
     }
 
-    const prompt = `You are the Product Lead for @theedgeai. Create a digital products brief based on this video's topic.
+    const prompt = `You are the Product Lead for @VRealAI. Create a digital products brief based on this video's topic.
 
 VIDEO TITLE: ${body.video_title}
 TOPIC: ${body.topic}

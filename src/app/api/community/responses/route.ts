@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     const commentsJson = JSON.stringify(body.comments.slice(0, 30));
     const voice = body.creator_voice ?? 'Direct, helpful, no fluff. Matches the opinionated but approachable tone of an AI tools expert.';
 
-    const prompt = `You are the Community Manager for @theedgeai. Generate replies to these YouTube comments.
+    const prompt = `You are the Community Manager for @VRealAI. Generate replies to these YouTube comments.
 
 VIDEO: ${body.video_title ?? 'Recent video'}
 CREATOR VOICE: ${voice}

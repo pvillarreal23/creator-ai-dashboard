@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     ctaCounter++;
 
     // Agent 1: Research & Outline
-    const outlineRaw = await callClaude(`You are a research agent for @theedgeai — a faceless AI tools YouTube channel.
+    const outlineRaw = await callClaude(`You are a research agent for @VRealAI — a faceless AI tools YouTube channel.
 Analyze this topic and create a detailed outline.
 TOPIC: ${topic} | TOOL: ${tool_name} | KEY INSIGHT: ${key_insight}
 
@@ -73,7 +73,7 @@ Return JSON: {"angle":"<unique teaching angle>","hook_premise":"<tension-creatin
     const outline = JSON.parse(outlineRaw) as { angle: string; hook_premise: string; chapters: unknown[]; cta_angle: string };
 
     // Agent 2: Full Script Writer
-    const scriptRaw = await callClaude(`You are a scriptwriter for @theedgeai. Write the full production script based on this outline.
+    const scriptRaw = await callClaude(`You are a scriptwriter for @VRealAI. Write the full production script based on this outline.
 TOPIC: ${topic} | TOOL: ${tool_name} | KEY INSIGHT: ${key_insight}
 OUTLINE: ${JSON.stringify(outline)}
 CTA TYPE: ${ctaType === 'subscribe_comment' ? 'ask to subscribe and comment' : 'direct to link in description'}

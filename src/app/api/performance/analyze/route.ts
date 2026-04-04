@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     const engagementRate = body.views > 0 ? (((body.likes ?? 0) + (body.comments ?? 0)) / body.views) * 100 : 0;
 
-    const prompt = `You are the Analytics Director for @theedgeai. Analyze this video's performance metrics.
+    const prompt = `You are the Analytics Director for @VRealAI. Analyze this video's performance metrics.
 
 VIDEO: ${body.video_title}
 TOPIC: ${body.topic}

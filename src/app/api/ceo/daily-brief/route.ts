@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
     const date = body.date ?? new Date().toISOString().split('T')[0];
 
-    const prompt = `You are the Chief of Staff for @theedgeai — a solo YouTube creator running an AI tools channel. Generate the daily CEO brief.
+    const prompt = `You are the Chief of Staff for @VRealAI — a solo YouTube creator running an AI tools channel. Generate the daily CEO brief.
 
 DATE: ${date}
 CHANNEL STATS TODAY:

@@ -9,7 +9,7 @@ export async function GET() {
       {
         id: '1',
         name: 'The AI Edge',
-        handle: '@theedgeai',
+        handle: '@VRealAI',
         subs: '—',
         subsCount: 0,
         views: '0',

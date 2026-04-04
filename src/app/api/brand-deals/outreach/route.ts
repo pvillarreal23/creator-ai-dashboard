@@ -50,10 +50,10 @@ export async function POST(request: Request) {
 
     const stats = body.channel_stats ?? { subscribers: 0, avg_views: 0, niche: 'AI tools' };
 
-    const prompt = `You are the Business Development Lead for @theedgeai. Write a brand deal outreach package.
+    const prompt = `You are the Business Development Lead for @VRealAI. Write a brand deal outreach package.
 
 BRAND: ${body.brand_name} (${body.brand_category})
-CHANNEL: @theedgeai — Faceless AI tools tutorials
+CHANNEL: @VRealAI — Faceless AI tools tutorials
 SUBSCRIBERS: ${stats.subscribers.toLocaleString()}
 AVG VIEWS: ${stats.avg_views.toLocaleString()}
 NICHE: ${stats.niche}

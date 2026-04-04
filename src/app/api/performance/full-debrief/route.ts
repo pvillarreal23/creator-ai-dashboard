@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: channel_name, videos' }, { status: 400 });
     }
 
-    const prompt = `You are the Analytics Director for @theedgeai. Generate a full channel performance debrief.
+    const prompt = `You are the Analytics Director for @VRealAI. Generate a full channel performance debrief.
 
 CHANNEL: ${body.channel_name}
 PERIOD: ${body.period ?? 'Last 30 days'}

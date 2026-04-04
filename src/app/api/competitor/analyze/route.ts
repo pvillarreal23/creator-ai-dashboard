@@ -47,13 +47,13 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: topic, tool_name' }, { status: 400 });
     }
 
-    const prompt = `You are the Competitive Intelligence Analyst for @theedgeai. Analyze the YouTube competitive landscape for this topic.
+    const prompt = `You are the Competitive Intelligence Analyst for @VRealAI. Analyze the YouTube competitive landscape for this topic.
 
 TOPIC: ${body.topic}
 TOOL: ${body.tool_name}
 KNOWN COMPETITOR CHANNELS: ${(body.competitor_channels ?? []).join(', ') || 'General AI tools channels'}
 
-@theedgeai differentiators: faceless, AI voiceover only, opinionated takes, fast-paced tutorials, no face cam, no vlog style.
+@VRealAI differentiators: faceless, AI voiceover only, opinionated takes, fast-paced tutorials, no face cam, no vlog style.
 
 Return ONLY valid JSON:
 {
@@ -65,7 +65,7 @@ Return ONLY valid JSON:
     {"channel_type": "<e.g. tutorial channel, review channel>", "weakness": "<what they do poorly>", "opportunity": "<how to capitalize>"}
   ],
   "top_performing_formats": ["<format that gets views in this niche>"],
-  "recommended_differentiation": "<the specific angle @theedgeai should take to win>",
+  "recommended_differentiation": "<the specific angle @VRealAI should take to win>",
   "estimated_competition_level": "low|medium|high|saturated",
   "winning_title_formulas": ["<title formula that performs well in this niche>"],
   "sample_competitor_videos": [

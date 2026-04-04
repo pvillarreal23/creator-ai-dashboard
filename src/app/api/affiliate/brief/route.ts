@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const body = await request.json() as Partial<AffiliateRequest>;
     if (!body.tool_name?.trim()) return Response.json({ error: 'Missing required field: tool_name' }, { status: 400 });
 
-    const prompt = `You are the Monetization Strategist for @theedgeai. Create an affiliate brief for this video.
+    const prompt = `You are the Monetization Strategist for @VRealAI. Create an affiliate brief for this video.
 
 TOOL REVIEWED: ${body.tool_name}
 TOPIC: ${body.topic}

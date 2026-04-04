@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: channel_name, existing_videos' }, { status: 400 });
     }
 
-    const prompt = `You are the SEO Strategist for @theedgeai. Optimize the YouTube playlist structure to maximize session time and subscriber conversion.
+    const prompt = `You are the SEO Strategist for @VRealAI. Optimize the YouTube playlist structure to maximize session time and subscriber conversion.
 
 CHANNEL: ${body.channel_name}
 NICHE: ${body.channel_niche ?? 'AI tools tutorials'}

@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: topic, tool_name' }, { status: 400 });
     }
 
-    const prompt = `You are Aria Chen — Research & Intelligence Lead for @theedgeai. Conduct deep research synthesis for this video topic.
+    const prompt = `You are Aria Chen — Research & Intelligence Lead for @VRealAI. Conduct deep research synthesis for this video topic.
 
 TOPIC: ${body.topic}
 TOOL: ${body.tool_name}
@@ -66,7 +66,7 @@ Return ONLY valid JSON:
   "trending_keywords": ["<10-15 keywords with search volume potential>"],
   "audience_questions": ["<5-8 questions the target audience is asking right now>"],
   "competitor_weaknesses": ["<3-5 gaps in existing YouTube content on this topic>"],
-  "unique_angle": "<the one thing @theedgeai can say that competitors haven't>"
+  "unique_angle": "<the one thing @VRealAI can say that competitors haven't>"
 }`;
 
     const raw = await callClaude(prompt);

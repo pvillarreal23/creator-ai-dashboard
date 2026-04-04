@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: video_title, topic' }, { status: 400 });
     }
 
-    const prompt = `You are the Distribution Manager for @theedgeai YouTube channel. Create a complete distribution plan.
+    const prompt = `You are the Distribution Manager for @VRealAI YouTube channel. Create a complete distribution plan.
 
 VIDEO TITLE: ${body.video_title}
 TOPIC: ${body.topic}

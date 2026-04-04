@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required field: hook' }, { status: 400 });
     }
 
-    const prompt = `You are Marcus Webb — Quality Control Director for @theedgeai. Review this script for brand compliance and production quality.
+    const prompt = `You are Marcus Webb — Quality Control Director for @VRealAI. Review this script for brand compliance and production quality.
 
 BRAND STANDARDS:
 - Faceless AI tutorial channel, opinionated and direct

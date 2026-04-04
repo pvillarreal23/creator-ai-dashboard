@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     const wordCount = body.transcript.split(/\s+/).length;
     const wordsPerSecond = wordCount / body.video_duration_seconds;
 
-    const prompt = `You are a professional caption formatter for @theedgeai YouTube channel. Format this TTS transcript into ${format.toUpperCase()} captions.
+    const prompt = `You are a professional caption formatter for @VRealAI YouTube channel. Format this TTS transcript into ${format.toUpperCase()} captions.
 
 TRANSCRIPT (${wordCount} words, ~${wordsPerSecond.toFixed(1)} words/sec):
 ${body.transcript}

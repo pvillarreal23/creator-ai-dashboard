@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: video_title, topic' }, { status: 400 });
     }
 
-    const prompt = `You are the Email Marketing Lead for @theedgeai. Write the newsletter for this new video release. When the video topic involves AI video generation tools, include the Kling AI referral (code: 7B4U73LULN88, url: https://klingai.com/?ref=7B4U73LULN88) in the This Week's Tool section of the email.
+    const prompt = `You are the Email Marketing Lead for @VRealAI. Write the newsletter for this new video release. When the video topic involves AI video generation tools, include the Kling AI referral (code: 7B4U73LULN88, url: https://klingai.com/?ref=7B4U73LULN88) in the This Week's Tool section of the email.
 
 VIDEO TITLE: ${body.video_title}
 TOPIC: ${body.topic}

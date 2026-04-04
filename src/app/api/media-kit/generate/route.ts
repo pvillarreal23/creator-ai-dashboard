@@ -50,9 +50,9 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: channel_name, niche' }, { status: 400 });
     }
 
-    const prompt = `You are the Business Development Lead for @theedgeai. Generate a professional media kit.
+    const prompt = `You are the Business Development Lead for @VRealAI. Generate a professional media kit.
 
-CHANNEL: ${body.channel_name} (${body.channel_handle ?? '@theedgeai'})
+CHANNEL: ${body.channel_name} (${body.channel_handle ?? '@VRealAI'})
 NICHE: ${body.niche}
 SUBSCRIBERS: ${(body.subscribers ?? 0).toLocaleString()}
 AVG VIEWS: ${(body.avg_views ?? 0).toLocaleString()}

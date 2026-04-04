@@ -49,7 +49,7 @@ let ctaCounter = 0;
 // ── Prompt builder ─────────────────────────────────────────────────────────────
 
 function buildPrompt(req: ScriptRequest, ctaType: 'subscribe_comment' | 'link_in_description'): string {
-  return `You are a scriptwriter for @theedgeai — a FACELESS AI TOOLS TUTORIAL channel on YouTube.
+  return `You are a scriptwriter for @VRealAI — a FACELESS AI TOOLS TUTORIAL channel on YouTube.
 Channel style: opinionated, direct, no fluff. Written for TTS: short sentences, em-dashes for pauses, ellipses for breath. Never more than 2 clauses per sentence.
 
 Write a complete video script using this production bible:

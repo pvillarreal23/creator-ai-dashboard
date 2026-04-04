@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     if (!body.video_title?.trim()) return Response.json({ error: 'Missing required field: video_title' }, { status: 400 });
     if (!Array.isArray(body.chapters) || body.chapters.length === 0) return Response.json({ error: 'Missing required field: chapters' }, { status: 400 });
 
-    const prompt = `You are Kai Nakamura — Shorts & Clips Specialist for @theedgeai. Create YouTube Shorts briefs from this long-form video.
+    const prompt = `You are Kai Nakamura — Shorts & Clips Specialist for @VRealAI. Create YouTube Shorts briefs from this long-form video.
 
 VIDEO TITLE: ${body.video_title}
 HOOK: ${body.hook_tts}

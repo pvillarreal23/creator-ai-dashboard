@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing required fields: video_title, topic' }, { status: 400 });
     }
 
-    const prompt = `You are the Thumbnail Specialist for @theedgeai. Design an A/B test for this video's thumbnail.
+    const prompt = `You are the Thumbnail Specialist for @VRealAI. Design an A/B test for this video's thumbnail.
 
 VIDEO TITLE: ${body.video_title}
 TOPIC: ${body.topic}
