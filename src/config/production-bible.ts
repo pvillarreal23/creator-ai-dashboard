@@ -74,5 +74,13 @@ export const PRODUCTION_BIBLE = {
       twoMinutePapers: "before/after output comparison structure",
       skillLeapAI: "evergreen tutorial SEO strategy"
     }
+  },
+  referral_links: {
+    kling_ai: {
+      code: '7B4U73LULN88',
+      url: 'https://klingai.com/?ref=7B4U73LULN88',
+      description: 'Kling AI — AI video generation (referral earns commission)',
+      include_in_descriptions: true,
+    }
   }
 }

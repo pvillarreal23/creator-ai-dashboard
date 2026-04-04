@@ -50,6 +50,8 @@ VIDEO TITLE: ${body.video_title}
 
 Identify affiliate opportunities for this AI tools channel. Use placeholder URLs (e.g., [AFFILIATE_LINK_TOOLNAME]).
 
+Always include the Kling AI referral link (https://klingai.com/?ref=7B4U73LULN88) in the description_links_section for any video that uses or mentions AI video generation. The referral code is 7B4U73LULN88.
+
 Return ONLY valid JSON:
 {
   "primary_tool": {
