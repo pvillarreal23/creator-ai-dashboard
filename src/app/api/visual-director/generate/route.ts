@@ -114,7 +114,7 @@ export async function GET() {
         step: 2,
         route:   'POST /api/visual-director/generate',
         label:   'You approve & generate',
-        description: 'Review Zara's prompt. Edit if needed. Send to this endpoint. Returns 4 image options from Ideogram.',
+        description: "Review Zara's prompt. Edit if needed. Send to this endpoint. Returns 4 image options from Ideogram.",
         editable: false,
       },
     ],
